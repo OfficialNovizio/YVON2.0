@@ -26,7 +26,7 @@ export const COLLAB_CONFIG: CollaborationConfig = {
 export interface AgentCollaboration {
   agentId: AgentId
   role: string
-  layer: string
+  department: string
   canCollaborateWith: AgentId[]
   dependencies: string[]
   autonomyLevel: 1 | 2 | 3
@@ -54,7 +54,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'marcus-ceo': {
     agentId: 'marcus-ceo',
     role: 'Chief Executive Officer',
-    layer: 'executive',
+    department: 'ceo',
     canCollaborateWith: ['diana-coo', 'lena-brand', 'kai-analyst'],
     dependencies: [],
     autonomyLevel: 1
@@ -62,7 +62,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'diana-coo': {
     agentId: 'diana-coo',
     role: 'Chief Operating Officer',
-    layer: 'executive',
+    department: 'ceo',
     canCollaborateWith: ['marcus-ceo', 'dev-lead', 'kai-analyst'],
     dependencies: [],
     autonomyLevel: 1
@@ -70,7 +70,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'dev-lead': {
     agentId: 'dev-lead',
     role: 'Lead Developer',
-    layer: 'technical',
+    department: 'technical',
     canCollaborateWith: ['raj-backend', 'mia-frontend', 'quinn-qa', 'diana-coo'],
     dependencies: ['raj-backend', 'mia-frontend'],
     autonomyLevel: 1
@@ -78,7 +78,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'raj-backend': {
     agentId: 'raj-backend',
     role: 'Backend Developer',
-    layer: 'technical',
+    department: 'technical',
     canCollaborateWith: ['dev-lead', 'mia-frontend'],
     dependencies: [],
     autonomyLevel: 2
@@ -86,7 +86,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'mia-frontend': {
     agentId: 'mia-frontend',
     role: 'Frontend Developer',
-    layer: 'technical',
+    department: 'technical',
     canCollaborateWith: ['dev-lead', 'raj-backend'],
     dependencies: [],
     autonomyLevel: 2
@@ -94,7 +94,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'quinn-qa': {
     agentId: 'quinn-qa',
     role: 'QA Engineer',
-    layer: 'technical',
+    department: 'technical',
     canCollaborateWith: ['dev-lead', 'raj-backend', 'mia-frontend'],
     dependencies: [],
     autonomyLevel: 2
@@ -102,15 +102,15 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'lena-brand': {
     agentId: 'lena-brand',
     role: 'Brand Strategist',
-    layer: 'marketing',
-    canCollaborateWith: ['marcus-ceo', 'sofia-social', 'atlas-art-director'],
+    department: 'marketing',
+    canCollaborateWith: ['marcus-ceo', 'atlas-art-director', 'kai-analyst'],
     dependencies: [],
     autonomyLevel: 2
   },
   'rio-ads': {
     agentId: 'rio-ads',
     role: 'Ads Specialist',
-    layer: 'marketing',
+    department: 'marketing',
     canCollaborateWith: ['marcus-ceo', 'lena-brand'],
     dependencies: [],
     autonomyLevel: 2
@@ -118,7 +118,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'atlas-art-director': {
     agentId: 'atlas-art-director',
     role: 'Art Director',
-    layer: 'marketing',
+    department: 'marketing',
     canCollaborateWith: ['lena-brand', 'pixel-production'],
     dependencies: ['pixel-production'],
     autonomyLevel: 2
@@ -126,7 +126,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'pixel-production': {
     agentId: 'pixel-production',
     role: 'Production Specialist',
-    layer: 'marketing',
+    department: 'marketing',
     canCollaborateWith: ['atlas-art-director'],
     dependencies: [],
     autonomyLevel: 2
@@ -134,7 +134,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'kai-analyst': {
     agentId: 'kai-analyst',
     role: 'Lead Analyst',
-    layer: 'analytics',
+    department: 'marketing',
     canCollaborateWith: ['marcus-ceo', 'nate-growth', 'lena-brand'],
     dependencies: [],
     autonomyLevel: 1
@@ -142,7 +142,7 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'nate-growth': {
     agentId: 'nate-growth',
     role: 'Growth Specialist',
-    layer: 'analytics',
+    department: 'marketing',
     canCollaborateWith: ['kai-analyst', 'marcus-ceo'],
     dependencies: [],
     autonomyLevel: 2
@@ -150,16 +150,16 @@ export const COLLABORATION_GRAPH: Record<AgentId, AgentCollaboration> = {
   'felix-finance': {
     agentId: 'felix-finance',
     role: 'Finance Manager',
-    layer: 'operations',
+    department: 'finance',
     canCollaborateWith: ['diana-coo', 'marcus-ceo'],
     dependencies: [],
     autonomyLevel: 2
   },
-  'stark-growth': {
-    agentId: 'stark-growth',
-    role: 'Personal Brand Coach',
-    layer: 'personal',
-    canCollaborateWith: ['lena-brand', 'sofia-social'],
+  'daniel-kahneman': {
+    agentId: 'daniel-kahneman',
+    role: 'Behavioral Economist',
+    department: 'psychology',
+    canCollaborateWith: ['marcus-ceo', 'lena-brand', 'rio-ads', 'kai-analyst', 'nate-growth', 'felix-finance'],
     dependencies: [],
     autonomyLevel: 2
   }
@@ -183,18 +183,17 @@ export function calculateRoutingConfidence(
 
   // Adjust based on agent specialization match
   const keywords = query.toLowerCase().split(/\s+/)
-  const layerKeywords: Record<string, string[]> = {
-    technical: ['api', 'code', 'build', 'error', 'typescript', 'supabase'],
-    marketing: ['content', 'brand', 'social', 'creative', 'copy'],
-    analytics: ['data', 'metric', 'analytics', 'growth', 'kpi'],
-    executive: ['strategy', 'priority', 'decision', 'plan'],
-    operations: ['process', 'workflow', 'budget', 'planning']
+  const deptKeywords: Record<string, string[]> = {
+    technical: ['api', 'code', 'build', 'error', 'typescript', 'supabase', 'database', 'backend', 'frontend'],
+    marketing: ['content', 'brand', 'social', 'creative', 'copy', 'ads', 'data', 'metric', 'analytics', 'growth', 'kpi', 'trend'],
+    ceo: ['strategy', 'priority', 'decision', 'plan', 'operations', 'process', 'workflow'],
+    finance: ['budget', 'finance', 'revenue', 'cost', 'profit', 'cac', 'ltv', 'mrr', 'roi']
   }
 
   for (const agentId of selectedAgents) {
     const agent = COLLABORATION_GRAPH[agentId]
     if (agent) {
-      const agentKeywords = layerKeywords[agent.layer] || []
+      const agentKeywords = deptKeywords[agent.department] || []
       const matches = keywords.filter(k => agentKeywords.includes(k))
       if (matches.length > 0) {
         confidence += 0.1
@@ -225,13 +224,14 @@ export function recommendCollaboration(
 
     // Simple keyword matching
     const keywords = query.toLowerCase().split(/\s+/)
-    const layerKeywords: Record<string, string[]> = {
-      technical: ['api', 'code', 'build', 'error', 'typescript', 'supabase'],
-      marketing: ['content', 'brand', 'social', 'creative', 'copy'],
-      analytics: ['data', 'metric', 'analytics', 'growth', 'kpi']
+    const deptKeywords: Record<string, string[]> = {
+      technical: ['api', 'code', 'build', 'error', 'typescript', 'supabase', 'database', 'backend', 'frontend'],
+      marketing: ['content', 'brand', 'social', 'creative', 'copy', 'ads', 'data', 'metric', 'analytics', 'growth', 'kpi', 'trend'],
+      ceo: ['strategy', 'priority', 'decision', 'plan', 'operations', 'process', 'workflow'],
+      finance: ['budget', 'finance', 'revenue', 'cost', 'profit', 'cac', 'ltv', 'mrr', 'roi']
     }
 
-    const partnerKeywords = layerKeywords[partner.layer] || []
+    const partnerKeywords = deptKeywords[partner.department] || []
     const matches = keywords.filter(k => partnerKeywords.includes(k))
 
     return {

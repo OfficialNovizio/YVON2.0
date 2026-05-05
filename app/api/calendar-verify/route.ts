@@ -1,6 +1,8 @@
 import { getAllVentures, getPastDuePlanned, getCachedPosts, upsertCachedPosts, markAsPosted, markAsMissed } from '@/lib/db'
 import { scrapeInstagramPosts, scrapeTikTokPosts, scrapeLinkedInPosts } from '@/lib/apify'
 import { jaccardSimilarity } from '@/lib/similarity'
+
+export const maxDuration = 60
 import type { ContentCalendarEntry, VentureConfig } from '@/lib/types'
 
 const SIMILARITY_THRESHOLD = 0.4

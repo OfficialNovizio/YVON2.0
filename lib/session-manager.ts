@@ -298,7 +298,7 @@ ${data.openDecisions.map(d => `- [ ] ${d}`).join('\n') || '- [ ] None'}
 | Date | Agent(s) | Task | Outcome | Next Step |
 |------|---------|------|---------|-----------|
 ${data.lastSessions.map(s =>
-  `| ${s.date} | ${s.agents.join(', ')} | ${s.task} | ${s.outline || ''} | ${s.nextStep || ''} |`
+  `| ${s.date} | ${s.agents.join(', ')} | ${s.task} | ${s.outcome || ''} | ${s.nextStep || ''} |`
 ).join('\n') || '| No sessions yet | | | | |'}
 
 ---

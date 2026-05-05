@@ -9,6 +9,7 @@
 import { NextRequest } from 'next/server'
 import { resolveSip } from '@/lib/sip-manager'
 import { getAgent } from '@/lib/agents'
+import type { AgentId } from '@/lib/types'
 import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Get agent configuration
-    const agent = getAgent(agentId as string)
+    const agent = getAgent(agentId as AgentId)
     if (!agent) {
       return Response.json({ error: 'Agent not found' }, { status: 404 })
     }

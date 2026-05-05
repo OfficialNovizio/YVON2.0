@@ -7,7 +7,7 @@ const CLASSIFIER_PROMPT = `You are a routing classifier for an AI team. Analyze 
 
 Available intents: strategy, marketing_content, social_tactics, content_create, growth_data, competitor_intel, technical_backend, technical_frontend, technical_general, qa_review, trending_content, operations, product_roadmap, advertising
 
-Available specialists: marcus-ceo, diana-coo, sofia-social, lena-brand, rio-ads, atlas-art-director, kai-analyst, zara-competitor, nate-growth, dev-lead, raj-backend, mia-frontend, quinn-qa, felix-finance
+Available specialists: marcus-ceo, diana-coo, lena-brand, rio-ads, atlas-art-director, pixel-production, kai-analyst, nate-growth, dev-lead, raj-backend, mia-frontend, quinn-qa, felix-finance
 
 Intent guidance:
 - technical_backend: API routes, database, Supabase, server-side logic, integrations, data models

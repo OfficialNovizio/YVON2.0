@@ -2,7 +2,7 @@ import type { AgentId, AgentSkill } from '@/lib/types'
 
 export const AGENT_SKILLS: Partial<Record<AgentId, AgentSkill[]>> = {
   'marcus-ceo': [
-    { id: 'ceo-brief', label: 'Morning Brief', description: 'Generate today\'s executive briefing', trigger: 'Generate a comprehensive morning brief for me covering: key metrics across all ventures, top priorities for today, risks to watch, and team status.' },
+    { id: 'ceo-brief', label: 'Morning Brief', description: "Generate today's executive briefing", trigger: 'Generate a comprehensive morning brief for me covering: key metrics across all ventures, top priorities for today, risks to watch, and team status.' },
     { id: 'ceo-strategy', label: 'Strategic Review', description: 'Review current strategy and next moves', trigger: 'Conduct a strategic review of YVON. Assess our current position, what\'s working, what\'s not, and recommend the top 3 strategic moves for the next 90 days.' },
     { id: 'ceo-decision', label: 'Decision Framework', description: 'Structure a complex decision', trigger: 'Help me structure a decision I need to make. I\'ll describe the options, and you frame it with: key criteria, trade-offs, risks, recommendation, and how to communicate it to the team.' },
     { id: 'ceo-investors', label: 'Investor Update', description: 'Draft an investor-ready update', trigger: 'Draft a concise investor update covering: what we built, key metrics, what\'s next, and any asks. Keep it confident, data-driven, and under 300 words.' },
@@ -13,13 +13,6 @@ export const AGENT_SKILLS: Partial<Record<AgentId, AgentSkill[]>> = {
     { id: 'coo-sop', label: 'Write SOP', description: 'Create a standard operating procedure', trigger: 'Help me write a standard operating procedure (SOP) for a recurring process. I\'ll describe the process, and you format it as: purpose, scope, steps, responsible party, and success criteria.' },
     { id: 'coo-scaling', label: 'Scaling Plan', description: 'Plan for scaling operations', trigger: 'Create a scaling plan for our operations. Identify what systems, processes, and hires we need to go from current state to 10x output without proportional cost increase.' },
     { id: 'coo-team-health', label: 'Team Health Check', description: 'Assess team performance and gaps', trigger: 'Run a team health check across the YVON agent team. Identify: who is overloaded, where there are skill gaps, what processes are breaking down, and recommended interventions.' },
-  ],
-
-  'sofia-social': [
-    { id: 'sofia-caption', label: 'Write Caption', description: 'Write an engaging social media caption', trigger: 'Write an engaging caption for a social media post. Give me 3 variants: one story-driven, one value-led, one punchy/short. Include a strong hook and relevant hashtag suggestions.' },
-    { id: 'sofia-reel', label: 'Reel Script', description: 'Script a short-form video', trigger: 'Script a 30-60 second Instagram Reel. Structure it as: hook (0-3s), problem/value setup (3-15s), content delivery (15-50s), CTA (50-60s). Make it conversational and scroll-stopping.' },
-    { id: 'sofia-calendar', label: 'Content Calendar', description: 'Plan a week of social content', trigger: 'Create a 7-day content calendar for this venture. For each day: content type (reel/carousel/post), topic, caption angle, and best posting time. Balance educational, entertaining, and promotional content.' },
-    { id: 'sofia-engagement', label: 'Engagement Tactics', description: 'Boost engagement on current content', trigger: 'Give me 5 specific engagement tactics to increase interaction on our social posts. Include: comment prompts, story strategies, DM sequences, collab ideas, and a 30-day engagement experiment to test.' },
   ],
 
   'lena-brand': [
@@ -42,13 +35,8 @@ export const AGENT_SKILLS: Partial<Record<AgentId, AgentSkill[]>> = {
     { id: 'kai-cohort', label: 'Cohort Analysis', description: 'Break down audience cohort behavior', trigger: 'Run a cohort analysis on our audience data. Segment by acquisition source, engagement level, and content preference. What are the most valuable cohorts and how do we grow them?' },
     { id: 'kai-dashboard', label: 'Dashboard Design', description: 'Design an analytics dashboard', trigger: 'Design a KPI dashboard for this venture. Recommend: the 6 most important metrics to track, how to visualize each, frequency of review, and what thresholds should trigger action.' },
     { id: 'kai-ab-test', label: 'A/B Test Plan', description: 'Design an A/B testing experiment', trigger: 'Design an A/B test for this hypothesis. Define: control vs variant, what we\'re measuring, sample size needed, test duration, statistical significance threshold, and how to interpret results.' },
-  ],
-
-  'zara-competitor': [
-    { id: 'zara-intel', label: 'Competitor Intel', description: 'Analyze a competitor\'s strategy', trigger: 'Analyze our top competitor\'s strategy. Cover: their content approach, posting frequency, engagement tactics, product positioning, pricing signals, and their apparent weak spots we can exploit.' },
-    { id: 'zara-gaps', label: 'Market Gaps', description: 'Identify underserved market opportunities', trigger: 'Identify market gaps our competitors are missing. Analyze: unserved audience segments, content topics they avoid, positioning white space, and emerging trends they\'re ignoring.' },
-    { id: 'zara-swot', label: 'SWOT Analysis', description: 'Run a competitive SWOT analysis', trigger: 'Run a SWOT analysis against our main competitors. Be specific and data-driven. For each quadrant, include 3-4 points with evidence. End with: our #1 competitive advantage we should double down on.' },
-    { id: 'zara-trends', label: 'Trend Monitoring', description: 'Surface emerging trends in our niche', trigger: 'Surface the top 5 emerging trends in our niche right now. For each: what it is, which competitors are adopting it, how fast it\'s growing, and whether we should jump on it, watch it, or ignore it.' },
+    { id: 'kai-competitor', label: 'Competitor Intel', description: 'Analyze competitor strategy (absorbed from Zara)', trigger: 'Analyze our top competitor\'s strategy. Cover: their content approach, posting frequency, engagement tactics, product positioning, pricing signals, and their apparent weak spots we can exploit.' },
+    { id: 'kai-gaps', label: 'Market Gaps', description: 'Identify underserved market opportunities', trigger: 'Identify market gaps our competitors are missing. Analyze: unserved audience segments, content topics they avoid, positioning white space, and emerging trends they\'re ignoring.' },
   ],
 
   'nate-growth': [
@@ -88,10 +76,10 @@ export const AGENT_SKILLS: Partial<Record<AgentId, AgentSkill[]>> = {
   ],
 
   'felix-finance': [
-    { id: 'vera-model', label: 'Revenue Model', description: 'Build a revenue projection model', trigger: 'Build a revenue model for this venture. Include: revenue streams, pricing assumptions, volume projections (Month 1, 3, 6, 12), cost structure, gross margin, and break-even analysis. Show your assumptions clearly.' },
-    { id: 'vera-roi', label: 'ROI Analysis', description: 'Calculate ROI for an initiative', trigger: 'Calculate the ROI for this initiative. Define: investment required (time + money), expected return (revenue uplift or cost savings), payback period, NPV if applicable, and recommendation to proceed or not.' },
-    { id: 'vera-budget', label: 'Budget Breakdown', description: 'Create a budget allocation plan', trigger: 'Create a budget allocation plan for this quarter. Break down by category (marketing, tools, contractors, ads, etc.), justify each allocation, and flag any areas where we are over-invested or under-invested.' },
-    { id: 'vera-unit-econ', label: 'Unit Economics', description: 'Analyze unit economics', trigger: 'Analyze the unit economics for this business. Calculate and interpret: CAC, LTV, LTV:CAC ratio, payback period, gross margin per unit, and contribution margin. Flag which levers move the needle most.' },
-    { id: 'vera-scenario', label: 'Scenario Planning', description: 'Model best/base/worst case scenarios', trigger: 'Run scenario planning for this financial decision. Model 3 cases: optimistic (+20% assumptions), base (realistic), and pessimistic (-20%). Show how the outcome changes and what triggers each scenario.' },
+    { id: 'felix-model', label: 'Revenue Model', description: 'Build a revenue projection model', trigger: 'Build a revenue model for this venture. Include: revenue streams, pricing assumptions, volume projections (Month 1, 3, 6, 12), cost structure, gross margin, and break-even analysis. Show your assumptions clearly.' },
+    { id: 'felix-roi', label: 'ROI Analysis', description: 'Calculate ROI for an initiative', trigger: 'Calculate the ROI for this initiative. Define: investment required (time + money), expected return (revenue uplift or cost savings), payback period, NPV if applicable, and recommendation to proceed or not.' },
+    { id: 'felix-budget', label: 'Budget Breakdown', description: 'Create a budget allocation plan', trigger: 'Create a budget allocation plan for this quarter. Break down by category (marketing, tools, contractors, ads, etc.), justify each allocation, and flag any areas where we are over-invested or under-invested.' },
+    { id: 'felix-unit-econ', label: 'Unit Economics', description: 'Analyze unit economics', trigger: 'Analyze the unit economics for this business. Calculate and interpret: CAC, LTV, LTV:CAC ratio, payback period, gross margin per unit, and contribution margin. Flag which levers move the needle most.' },
+    { id: 'felix-scenario', label: 'Scenario Planning', description: 'Model best/base/worst case scenarios', trigger: 'Run scenario planning for this financial decision. Model 3 cases: optimistic (+20% assumptions), base (realistic), and pessimistic (-20%). Show how the outcome changes and what triggers each scenario.' },
   ],
 }

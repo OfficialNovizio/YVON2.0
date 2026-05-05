@@ -137,10 +137,9 @@ export class RoutingFeedbackService {
     const queryWords = query.toLowerCase().split(/\s+/)
     const agentKeywords: Record<string, string[]> = {
       'technical': ['api', 'code', 'build', 'error', 'typescript', 'supabase', 'backend', 'frontend'],
-      'marketing': ['content', 'brand', 'social', 'creative', 'copy', 'ads'],
-      'analytics': ['data', 'metric', 'analytics', 'growth', 'kpi', 'report'],
-      'executive': ['strategy', 'priority', 'decision', 'plan', 'ceo', 'coo'],
-      'operations': ['process', 'workflow', 'budget', 'planning', 'finance']
+      'marketing': ['content', 'brand', 'social', 'creative', 'copy', 'ads', 'data', 'metric', 'analytics', 'growth', 'kpi', 'report'],
+      'ceo': ['strategy', 'priority', 'decision', 'plan', 'ceo', 'coo'],
+      'finance': ['budget', 'finance', 'revenue', 'cost', 'profit', 'cac', 'ltv', 'mrr']
     }
 
     let matches = 0
@@ -154,23 +153,22 @@ export class RoutingFeedbackService {
   }
 
   private getAgentLayer(agentId: AgentId): string {
-    const layerMap: Record<string, string> = {
-      'marcus-ceo': 'executive',
-      'diana-coo': 'executive',
+    const deptMap: Record<string, string> = {
+      'marcus-ceo': 'ceo',
+      'diana-coo': 'ceo',
       'dev-lead': 'technical',
       'raj-backend': 'technical',
       'mia-frontend': 'technical',
       'quinn-qa': 'technical',
+      'kai-analyst': 'marketing',
       'lena-brand': 'marketing',
       'rio-ads': 'marketing',
+      'nate-growth': 'marketing',
       'atlas-art-director': 'marketing',
       'pixel-production': 'marketing',
-      'kai-analyst': 'analytics',
-      'nate-growth': 'analytics',
-      'felix-finance': 'operations',
-      'stark-growth': 'personal'
+      'felix-finance': 'finance',
     }
-    return layerMap[agentId] || 'personal'
+    return deptMap[agentId] || 'marketing'
   }
 
   // ─── Pattern Learning ────────────────────────────────────────────────────────
@@ -185,9 +183,10 @@ export class RoutingFeedbackService {
       if (feedback.feedback === 'good') {
         pattern.successCount++
         // Update successful agents (weighted)
+        const p = pattern
         feedback.selectedAgents.forEach(agent => {
-          if (!pattern.successfulAgents.includes(agent)) {
-            pattern.successfulAgents.push(agent)
+          if (!p.successfulAgents.includes(agent)) {
+            p.successfulAgents.push(agent)
           }
         })
       } else {

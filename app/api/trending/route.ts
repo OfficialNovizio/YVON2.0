@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { runWebScraper } from '@/lib/apify'
 import { upsertTrendingItem } from '@/lib/db'
+
+export const maxDuration = 30
 import type { TrendItem } from '@/lib/types'
 
 // Keywords to scrape — update these for your niche

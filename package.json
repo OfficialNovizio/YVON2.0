@@ -5,8 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "db:migrate": "node scripts/migrate.mjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "graphify:build": "C:/Users/Novy/AppData/Roaming/Python/Python314/Scripts/graphify.exe update . && node scripts/graphify-postprocess.mjs",
+    "graphify:watch": "C:/Users/Novy/AppData/Roaming/Python/Python314/Scripts/graphify.exe watch .",
+    "graphify:query": "C:/Users/Novy/AppData/Roaming/Python/Python314/Scripts/graphify.exe query",
+    "codegraph:build": "node scripts/codegraph-build.mjs",
+    "codegraph:serve": "C:/Users/Novy/AppData/Roaming/Python/Python314/Scripts/code-review-graph.exe serve"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

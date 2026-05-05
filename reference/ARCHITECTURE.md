@@ -48,7 +48,7 @@ supabase.ts             Server-side Supabase client (service role key)
 supabase-client.ts      Browser Supabase client (anon key)
 db.ts                   Typed DB helpers
 agents.ts               All agent configs (defaults — Supabase is live source of truth)
-agent-skills.ts         Agent skills registry
+agent-department/agent-skills.ts         Agent skills registry
 venture-context.ts      Active venture helpers (cookie-based)
 claude-client.ts        SSE consumer
 storage.ts              Ephemeral UI state only — no data keys

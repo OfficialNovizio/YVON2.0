@@ -27,10 +27,10 @@ export async function POST(request: Request): Promise<Response> {
   } = body
 
   // Pick agents based on platform
-  // LinkedIn: Lena writes copy, Sofia handles platform tactics
-  // Instagram: Lena + Sofia (same pairing, platform-native focus)
+  // LinkedIn: Lena writes copy, Kai handles platform analytics
+  // Instagram: Lena + Kai (same pairing, platform-native focus)
   const primaryAgent   = getAgent('lena-brand')
-  const secondaryAgent = getAgent('sofia-social')
+  const secondaryAgent = getAgent('kai-analyst')
 
   const systemCtx = [primaryAgent?.systemPrompt, secondaryAgent?.systemPrompt]
     .filter(Boolean)

@@ -74,32 +74,31 @@ export interface AgentSettings {
   mcpToggles: Record<string, boolean>
 }
 
+export type AgentDepartment = 'ceo' | 'technical' | 'marketing' | 'finance' | 'psychology'
+
+/** @deprecated Use AgentDepartment instead */
 export type AgentLayer = 'executive' | 'marketing' | 'analytics' | 'technical' | 'operations' | 'personal'
 
 export type AgentId =
-  // Executive
+  // CEO Department
   | 'marcus-ceo'
   | 'diana-coo'
-  // Marketing
-  | 'sofia-social'
-  | 'lena-brand'
-  | 'rio-ads'
-  | 'atlas-art-director'
-  | 'pixel-production'
-  // Analytics
-  | 'kai-analyst'
-  | 'zara-competitor'
-  | 'nate-growth'
-  | 'venture-scout'
-  // Technical
+  // Technical Department
   | 'dev-lead'
   | 'raj-backend'
   | 'mia-frontend'
   | 'quinn-qa'
-  // Operations
+  // Marketing Department
+  | 'kai-analyst'
+  | 'lena-brand'
+  | 'rio-ads'
+  | 'nate-growth'
+  | 'atlas-art-director'
+  | 'pixel-production'
+  // Finance Department
   | 'felix-finance'
-  // Personal
-  | 'stark-growth'
+  // Psychology Department
+  | 'daniel-kahneman'
 
 /** @deprecated Use AgentId instead */
 export type AgentName =
@@ -112,13 +111,12 @@ export interface AgentConfig {
   id: AgentId
   name: string
   role: string
-  layer: AgentLayer
+  department: AgentDepartment
   color: string
   icon: string
   model: string
   personality?: string   // Genius counterpart, e.g. "Shaped by Steve Jobs"
   systemPrompt: string
-  webSearch?: boolean
 }
 
 // ─── Venture ─────────────────────────────────────────────────────────────────
@@ -183,6 +181,149 @@ export interface RoutingResult {
 export interface SpecialistBriefing {
   agentId: AgentId
   content: string
+}
+
+// ─── War Room Execution ───────────────────────────────────────────────────────
+
+export interface ExecutionPlan {
+  objective: string
+  agents: AgentId[]
+  order: 'parallel' | 'sequential'
+  each_agent_task: Partial<Record<AgentId, string>>
+  definition_of_done: string
+}
+
+export type AgentRunStatus = 'idle' | 'working' | 'done' | 'error' | 'retrying'
+
+// ─── War Room Plan History ─────────────────────────────────────────────────────
+
+export interface WarRoomStep {
+  id: string
+  planId: string
+  agentId: AgentId
+  taskBrief: string | null
+  outputContent: string | null
+  status: 'complete' | 'error' | 'retried'
+  retryCount: number
+  createdAt: string
+}
+
+export interface WarRoomPlanRecord {
+  id: string
+  ventureName: string
+  userPrompt: string
+  intent: string | null
+  objective: string | null
+  definitionDone: string | null
+  agentOrder: 'parallel' | 'sequential'
+  agentsUsed: AgentId[]
+  status: 'complete' | 'partial' | 'error'
+  synthesis: string | null
+  elapsedMs: number | null
+  createdAt: string
+  steps: WarRoomStep[]
+}
+
+// SSE event shapes emitted by /api/team-chat
+export type WarRoomEvent =
+  | { type: 'routing';        routing: RoutingResult; confidence: number }
+  | { type: 'plan';           plan: ExecutionPlan | null; routing: RoutingResult }
+  | { type: 'agent_start';    agentId: AgentId; task: string }
+  | { type: 'agent_complete'; agentId: AgentId; previewText: string; tokensUsed?: number }
+  | { type: 'agent_error';    agentId: AgentId; error: string; fatal: boolean }
+  | { type: 'retry';          agentId: AgentId; attempt: number }
+  | { type: 'handoff';        from: AgentId; to: AgentId; summary: string }
+  | { type: 'autonomy';       agentId: AgentId; level: number; action: string }
+  | { type: 'collaboration';  primaryAgent: AgentId; recommendedPartners: AgentId[]; note: string }
+  | { type: 'text';           content: string }
+  | { type: 'plan_complete';  elapsed: number }
+  | { type: 'error';          message: string }
+
+// ─── Hermes: Structured Handoff (Phase 0) ────────────────────────────────────
+
+export type HandoffType = 'data' | 'content' | 'strategy' | 'technical' | 'growth' | 'validation'
+export type HandoffConfidence = 'high' | 'medium' | 'low'
+
+export interface StructuredHandoff {
+  summary: string
+  type: HandoffType
+  key_output: string
+  confidence: HandoffConfidence
+}
+
+// ─── Hermes: Agent Memory (Phase 1) ──────────────────────────────────────────
+
+export interface AgentSession {
+  id?: string
+  agentId: AgentId
+  venture: string
+  task: string
+  outcome: string
+  systemTarget: 'system1' | 'system2' | 'mixed' | null
+  tokensUsed: number | null
+  durationMs: number | null
+  sessionSearch?: string   // tsvector — set server-side, not needed in TS
+  createdAt?: string
+}
+
+export interface StrategyLogEntry {
+  id?: string
+  brand: string
+  surface: string
+  lever: string
+  layerNumber: number
+  variantA: string
+  variantB: string
+  runRecommendation: 'A' | 'B'
+  result: string | null       // null = PENDING
+  diagnosis: string | null
+  mechanismConfirmed: boolean | null
+  nextCycleDirection: string | null
+  createdAt?: string
+}
+
+export interface LeverTrackerEntry {
+  id?: string
+  brand: string
+  surface: string
+  lever: string
+  usageCount: number        // 1–3, caps at 3
+  capped: boolean
+  lastUsed: string
+}
+
+export interface BrandPsychologyNote {
+  id?: string
+  brand: string
+  surface: string | null
+  category: 'audience' | 'lever' | 'archetype' | 'tone' | 'timing' | 'general'
+  note: string
+  confidence: HandoffConfidence
+  createdAt?: string
+}
+
+// ─── Hermes: Skill Registry (Phase 4) ────────────────────────────────────────
+
+export interface SkillRegistryEntry {
+  id?: string
+  name: string
+  agentId: AgentId
+  variant: string | null         // 'lean' | 'deep' | null
+  category: string
+  description: string
+  triggerKeywords: string[]
+  learnedActivations: LearnedActivation[]
+  content: string
+  createdAt?: string
+}
+
+export interface LearnedActivation {
+  date: string
+  brand: string
+  surface: string
+  lever: string
+  result: 'worked' | 'failed'
+  mechanismNote: string
 }
 
 // ─── Settings ─────────────────────────────────────────────────────────────────

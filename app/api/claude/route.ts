@@ -72,8 +72,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const resolvedModel = model ?? 'claude-sonnet-4-6'
-  const agentCfg = agentId ? getAgent(agentId as AgentId) : null
-  const useWebSearch = agentCfg?.webSearch === true
+  // Note: webSearch flags removed — proxy cannot use Anthropic beta web search tool
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -89,15 +88,8 @@ export async function POST(request: Request): Promise<Response> {
           messages: [{ role: 'user' as const, content: userMessage }],
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- beta web_search_20250305 not yet typed in SDK
-        const streamParams: any = useWebSearch
-          ? { ...baseParams, tools: [{ type: 'web_search_20250305', name: 'web_search' }] }
-          : baseParams
-
-        const anthropicStream = useWebSearch
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- beta endpoint
-          ? await (client.beta as any).messages.stream(streamParams, { headers: { 'anthropic-beta': 'web-search-2025-03-05' } })
-          : await client.messages.stream(baseParams)
+        // Note: web search beta tools removed — local proxy cannot use Anthropic beta endpoints
+        const anthropicStream = await client.messages.stream(baseParams)
 
         for await (const event of anthropicStream) {
           if (
@@ -106,14 +98,6 @@ export async function POST(request: Request): Promise<Response> {
           ) {
             const data = JSON.stringify({ text: event.delta.text })
             controller.enqueue(encoder.encode(`data: ${data}\n\n`))
-          }
-          // Emit a searching indicator when web_search tool is invoked
-          if (
-            event.type === 'content_block_start' &&
-            (event.content_block as { type: string; name?: string }).type === 'tool_use' &&
-            (event.content_block as { type: string; name?: string }).name === 'web_search'
-          ) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ searching: true })}\n\n`))
           }
         }
 

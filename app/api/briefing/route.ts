@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createBrief } from '@/lib/db'
 import { getAgent } from '@/lib/agents'
+
+export const maxDuration = 60
 import { getVentureConfig } from '@/lib/venture-context'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })

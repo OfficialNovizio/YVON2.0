@@ -1,6 +1,8 @@
 import { runLinkedInScraper } from '@/lib/apify'
 import { setSocialStats } from '@/lib/db'
 
+export const maxDuration = 30
+
 export async function POST(request: Request): Promise<Response> {
   if (!process.env.APIFY_TOKEN) {
     return Response.json({ error: 'APIFY_TOKEN not set' }, { status: 500 })

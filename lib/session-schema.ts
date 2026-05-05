@@ -78,7 +78,7 @@ export function validateSessionContent(content: string): {
     if (result.success) {
       data = result.data
     } else {
-      errors.push(...result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`))
+      errors.push(...result.error.issues.map(e => `${e.path.join('.')}: ${e.message}`))
     }
   } catch (error) {
     errors.push(`Parse error: ${error instanceof Error ? error.message : 'Unknown error'}`)

@@ -15,15 +15,14 @@
     {
       "path": "/api/calendar-verify",
       "schedule": "0 6 * * 0"
+    },
+    {
+      "path": "/api/agent-cron/calibration",
+      "schedule": "0 8 * * 5"
+    },
+    {
+      "path": "/api/agent-cron/pulse",
+      "schedule": "0 17 * * 5"
     }
-  ],
-  "functions": {
-    "app/api/scrape/route.ts":      { "maxDuration": 30 },
-    "app/api/trending/route.ts":    { "maxDuration": 30 },
-    "app/api/instagram/route.ts":   { "maxDuration": 30 },
-    "app/api/linkedin/route.ts":    { "maxDuration": 30 },
-    "app/api/team-chat/route.ts":   { "maxDuration": 60 },
-    "app/api/briefing/route.ts":    { "maxDuration": 60 },
-    "app/api/calendar-verify/route.ts": { "maxDuration": 60 }
-  }
+  ]
 }
