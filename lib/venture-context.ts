@@ -22,7 +22,9 @@ export function setActiveVentureSlugClient(slug: string): void {
   document.cookie = `${COOKIE_NAME}=${encodeURIComponent(slug)}; path=/; max-age=31536000; SameSite=Lax`
 }
 
-// ─── Venture config from env vars ─────────────────────────────────────────────
+// ─── Sync fallback (env vars) — used by analytics/briefing routes ─────────────
+// These routes call getVentureConfig() synchronously. Keep this until they are
+// migrated to the async DB version below.
 
 export function getVentureConfig(slug: string): VentureConfig {
   if (slug === 'hourbour') {

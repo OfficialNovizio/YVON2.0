@@ -121,6 +121,22 @@ export interface AgentConfig {
 
 // ─── Venture ─────────────────────────────────────────────────────────────────
 
+export type SocialPlatform =
+  | 'instagram' | 'youtube' | 'linkedin' | 'tiktok'
+  | 'twitter'   | 'facebook' | 'pinterest'
+  | 'github'    | 'discord'  | 'telegram'
+
+export type BrandType = 'ecommerce' | 'saas' | 'agency' | 'media' | 'marketplace'
+export type VentureStatus = 'active' | 'paused' | 'archived'
+
+export interface VentureSocial {
+  id: string
+  ventureId: string
+  platform: SocialPlatform
+  handleOrUrl: string
+  createdAt: string
+}
+
 export interface VentureContext {
   id: string
   name: string
@@ -137,10 +153,22 @@ export interface VentureConfig {
   name: string
   slug: string
   color: string
+  // Legacy integration fields — still used by analytics/briefing routes via env fallback
   igHandle: string
   ytChannelId: string
   liProfileUrl: string
   ga4PropertyId: string
+  // Rich profile fields (migration 014)
+  description?: string
+  tagline?: string
+  brandType?: BrandType
+  status?: VentureStatus
+  websiteUrl?: string
+  logoUrl?: string
+  foundedYear?: number
+  repoUrl?: string
+  notionUrl?: string
+  updatedAt?: string
 }
 
 // ─── Briefs ──────────────────────────────────────────────────────────────────

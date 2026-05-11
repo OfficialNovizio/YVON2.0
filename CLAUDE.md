@@ -2,7 +2,7 @@
 project: yvon
 owner: Stark
 version: 3.0
-last-updated: 2026-05-02
+last-updated: 2026-05-08
 ---
 
 # CLAUDE.md — Official YVON
@@ -97,15 +97,26 @@ Identify agent(s) from the routing table. Name every agent involved before doing
 ### Step 2 — Plan (output this block before touching any code or content)
 ```
 👑 MARCUS PLAN
-────────────────────────────────────────
+────────────────────────────────────────────────────────
 Objective:          [one sentence]
 Agents:             [list]
 Order:              parallel | sequential
 ─ [Agent name]:     [their specific subtask]
 ─ [Agent name]:     [their specific subtask]
 Definition of done: [binary — done or not done]
-────────────────────────────────────────
+────────────────────────────────────────────────────────
+Verification:       [tests | build+lint | browser | manual check]
+Prerequisites:      [migrations run? env vars set? files exist? branch correct?]
+Known unknown:      [the one thing that could change scope — state it before starting]
+Risk:               [what could break + blast radius if it does]
+Rollback:           [how to undo — revert commit / drop migration / restore file]
+Est. cost:          [Haiku/Sonnet calls × ~tokens ≈ $X | or "no LLM cost"]
+────────────────────────────────────────────────────────
 ```
+
+**Self-review required:** Before presenting this plan, stress-test each phase internally.
+Ask: dependencies correct? execution context right? assumptions stated? prerequisites exist?
+Only present the reviewed version. State known uncertainties inline — do not wait to be asked.
 
 ### Step 3 — Execute
 Work through each agent's task in their role. If sequential, pass prior agent's summary as context to next.
