@@ -11382,8 +11382,8 @@
       "source_file": "C:\\Users\\Novy\\Desktop\\Projects\\Official YVON\\lib\\db.ts",
       "source_location": "L1654",
       "weight": 1.0,
-      "_src": "db_getsocialhistory",
-      "_tgt": "page_now",
+      "_src": "page_now",
+      "_tgt": "db_getsocialhistory",
       "source": "page_now",
       "target": "db_getsocialhistory"
     },
@@ -11394,8 +11394,8 @@
       "source_file": "C:\\Users\\Novy\\Desktop\\Projects\\Official YVON\\lib\\db.ts",
       "source_location": "L1708",
       "weight": 1.0,
-      "_src": "db_getanalyticshistory",
-      "_tgt": "page_now",
+      "_src": "page_now",
+      "_tgt": "db_getanalyticshistory",
       "source": "page_now",
       "target": "db_getanalyticshistory"
     },
@@ -11406,8 +11406,8 @@
       "source_file": "C:\\Users\\Novy\\Desktop\\Projects\\Official YVON\\lib\\db.ts",
       "source_location": "L1749",
       "weight": 1.0,
-      "_src": "db_getcompetitorhistory",
-      "_tgt": "page_now",
+      "_src": "page_now",
+      "_tgt": "db_getcompetitorhistory",
       "source": "page_now",
       "target": "db_getcompetitorhistory"
     },
