@@ -1,12 +1,12 @@
-# Graph Report - C:\Users\Novy\Desktop\Projects\Official YVON  (2026-05-12)
+# Graph Report - C:\Users\Novy\Desktop\Projects\Official YVON  (2026-05-13)
 
 ## Corpus Check
-- 167 files · ~102,987 words
+- 177 files · ~119,401 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 581 nodes · 940 edges · 67 communities detected
-- Extraction: 77% EXTRACTED · 23% INFERRED · 0% AMBIGUOUS · INFERRED: 218 edges (avg confidence: 0.8)
+- 618 nodes · 997 edges · 72 communities detected
+- Extraction: 76% EXTRACTED · 24% INFERRED · 0% AMBIGUOUS · INFERRED: 236 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -77,21 +77,28 @@
 - [[_COMMUNITY_Community 64|Community 64]]
 - [[_COMMUNITY_Community 65|Community 65]]
 - [[_COMMUNITY_Community 66|Community 66]]
+- [[_COMMUNITY_Community 67|Community 67]]
+- [[_COMMUNITY_Community 68|Community 68]]
+- [[_COMMUNITY_Community 69|Community 69]]
+- [[_COMMUNITY_Community 70|Community 70]]
+- [[_COMMUNITY_Community 71|Community 71]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `POST()` - 123 edges
-2. `GET()` - 115 edges
-3. `MonitoringService` - 21 edges
-4. `now()` - 18 edges
-5. `PATCH()` - 17 edges
+1. `POST()` - 130 edges
+2. `GET()` - 119 edges
+3. `now()` - 21 edges
+4. `MonitoringService` - 21 edges
+5. `PATCH()` - 19 edges
 6. `RoutingFeedbackService` - 17 edges
 7. `ErrorTracker` - 16 edges
 8. `SkillsManager` - 14 edges
 9. `SessionManager` - 13 edges
-10. `DELETE()` - 11 edges
+10. `DELETE()` - 12 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `GET()` --calls--> `getDailyLogs()`  [INFERRED]
+  C:\Users\Novy\Desktop\Projects\Official YVON\app\api\war-room-plans\route.ts → C:\Users\Novy\Desktop\Projects\Official YVON\lib\db.ts
+- `GET()` --calls--> `setAnalyticsReport()`  [INFERRED]
   C:\Users\Novy\Desktop\Projects\Official YVON\app\api\war-room-plans\route.ts → C:\Users\Novy\Desktop\Projects\Official YVON\lib\db.ts
 - `GET()` --calls--> `getTrendingItems()`  [INFERRED]
   C:\Users\Novy\Desktop\Projects\Official YVON\app\api\war-room-plans\route.ts → C:\Users\Novy\Desktop\Projects\Official YVON\lib\db.ts
@@ -99,45 +106,43 @@
   C:\Users\Novy\Desktop\Projects\Official YVON\app\api\war-room-plans\route.ts → C:\Users\Novy\Desktop\Projects\Official YVON\lib\db.ts
 - `GET()` --calls--> `getCompetitorContent()`  [INFERRED]
   C:\Users\Novy\Desktop\Projects\Official YVON\app\api\war-room-plans\route.ts → C:\Users\Novy\Desktop\Projects\Official YVON\lib\db.ts
-- `GET()` --calls--> `getMissedEntries()`  [INFERRED]
-  C:\Users\Novy\Desktop\Projects\Official YVON\app\api\war-room-plans\route.ts → C:\Users\Novy\Desktop\Projects\Official YVON\lib\db.ts
 
 ## Communities
 
 ### Community 0 - "Community 0"
 Cohesion: 0.02
-Nodes (45): getBrandDNA(), saveBrandDNA(), getCommunitySignals(), upsertCommunitySignal(), acknowledgeAnomaly(), createAnomalyAlert(), createAttributionEntry(), createRevenueEvent() (+37 more)
+Nodes (45): getBrandDNA(), saveBrandDNA(), getCommunitySignals(), upsertCommunitySignal(), getAllAgentSettings(), getVentureSocials(), createAnomalyAlert(), createAttributionEntry() (+37 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.03
-Nodes (46): appendDailyLog(), createBrief(), createContentSuggestion(), createDecision(), createDeliverable(), createSop(), createTask(), createVenture() (+38 more)
+Cohesion: 0.06
+Nodes (8): getCompetitorHistory(), getInsights(), runSkillLifecycleTransitions(), ErrorTracker, MonitoringService, entry(), now(), RoutingFeedbackService
 
 ### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (25): logActivity(), streamMessage(), appendLearnedActivation(), createContentCalendarEntry(), deleteAgentMemory(), deleteContentCalendarEntry(), deleteVenture(), deleteVentureSocial() (+17 more)
+Cohesion: 0.04
+Nodes (45): appendDailyLog(), createBrief(), createContentSuggestion(), createDecision(), createDeliverable(), createSop(), createTask(), createVenture() (+37 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.08
-Nodes (6): getInsights(), runSkillLifecycleTransitions(), ErrorTracker, MonitoringService, entry(), now()
+Cohesion: 0.06
+Nodes (26): logActivity(), bustProviderCache(), appendLearnedActivation(), createContentCalendarEntry(), deleteAgentMemory(), deleteContentCalendarEntry(), deleteVenture(), deleteVentureSocial() (+18 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.1
-Nodes (21): getAgent(), callFast(), callSynthesis(), getActiveProviderInfo(), loadConfig(), oaiCall(), oaiMessages(), getArchiveRecommendations() (+13 more)
+Cohesion: 0.07
+Nodes (28): getAgent(), callFast(), callSynthesis(), getActiveProviderInfo(), loadConfig(), oaiCall(), oaiMessages(), getArchiveRecommendations() (+20 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.08
 Nodes (8): addDays(), derivedSlug(), fmtShortDate(), handleDelete(), handleNameChange(), handleSave(), handleToggle(), loadRepo()
 
 ### Community 6 - "Community 6"
-Cohesion: 0.12
-Nodes (16): getWarRoomPlans(), deleteVenture(), fetchVenture(), clearAll(), get(), getActiveTab(), getScrollPos(), isBrowser() (+8 more)
+Cohesion: 0.11
+Nodes (17): getWarRoomPlans(), MerchandizeLayout(), deleteVenture(), fetchVenture(), clearAll(), get(), getActiveTab(), getScrollPos() (+9 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.18
-Nodes (1): RoutingFeedbackService
+Cohesion: 0.16
+Nodes (19): runInstagramScraper(), runLinkedInScraper(), runWebScraper(), scrapeInstagramPosts(), scrapeLinkedInPosts(), scrapeTikTokPosts(), startRun(), waitForRun() (+11 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.32
+Cohesion: 0.3
 Nodes (1): SkillsManager
 
 ### Community 9 - "Community 9"
@@ -157,32 +162,32 @@ Cohesion: 0.27
 Nodes (8): getRow(), load(), remove(), saveAnthropic(), saveCustom(), test(), toggle(), detectProviderFromUrl()
 
 ### Community 13 - "Community 13"
-Cohesion: 0.44
-Nodes (9): runInstagramScraper(), runLinkedInScraper(), runWebScraper(), scrapeInstagramPosts(), scrapeLinkedInPosts(), scrapeTikTokPosts(), startRun(), waitForRun() (+1 more)
-
-### Community 14 - "Community 14"
 Cohesion: 0.33
 Nodes (6): classifyIntent(), containsInjection(), gatekeep(), generateReasoning(), generateReformulation(), validateContext()
 
-### Community 15 - "Community 15"
+### Community 14 - "Community 14"
 Cohesion: 0.52
 Nodes (6): archiveOldEntries(), batchOptimizeMemoryFiles(), compressOldEntries(), enforceSectionCaps(), getSectionStats(), optimizeMemoryFile()
 
-### Community 16 - "Community 16"
+### Community 15 - "Community 15"
 Cohesion: 0.7
 Nodes (4): migrateSessionContent(), parseSessionContent(), validateAndMigrate(), validateSessionContent()
 
-### Community 17 - "Community 17"
+### Community 16 - "Community 16"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 18 - "Community 18"
+### Community 17 - "Community 17"
 Cohesion: 0.5
 Nodes (1): DOT()
 
-### Community 19 - "Community 19"
+### Community 18 - "Community 18"
 Cohesion: 0.5
 Nodes (1): enrichScoreCards()
+
+### Community 19 - "Community 19"
+Cohesion: 0.67
+Nodes (0): 
 
 ### Community 20 - "Community 20"
 Cohesion: 0.67
@@ -197,11 +202,11 @@ Cohesion: 0.67
 Nodes (0): 
 
 ### Community 23 - "Community 23"
-Cohesion: 1.0
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 24 - "Community 24"
-Cohesion: 1.0
+Cohesion: 0.67
 Nodes (0): 
 
 ### Community 25 - "Community 25"
@@ -370,114 +375,140 @@ Nodes (0):
 
 ### Community 66 - "Community 66"
 Cohesion: 1.0
+Nodes (0): 
+
+### Community 67 - "Community 67"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 68 - "Community 68"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 69 - "Community 69"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 70 - "Community 70"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 71 - "Community 71"
+Cohesion: 1.0
 Nodes (1): Wait for server to be ready by polling the port.
 
 ## Knowledge Gaps
 - **1 isolated node(s):** `Wait for server to be ready by polling the port.`
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 23`** (2 nodes): `layout.tsx`, `RootLayout()`
+- **Thin community `Community 25`** (2 nodes): `layout.tsx`, `RootLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 24`** (2 nodes): `page.tsx`, `Home()`
+- **Thin community `Community 26`** (2 nodes): `page.tsx`, `Home()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 25`** (2 nodes): `Shimmer.tsx`, `Shimmer()`
+- **Thin community `Community 27`** (2 nodes): `Shimmer.tsx`, `Shimmer()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 26`** (2 nodes): `VentureGate.tsx`, `VentureGate()`
+- **Thin community `Community 28`** (2 nodes): `VentureGate.tsx`, `VentureGate()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 27`** (2 nodes): `NavBar.tsx`, `handleLogout()`
+- **Thin community `Community 29`** (2 nodes): `page.tsx`, `handleLogin()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 28`** (2 nodes): `page.tsx`, `handleLogin()`
+- **Thin community `Community 30`** (2 nodes): `layout.tsx`, `ScreensLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 29`** (2 nodes): `layout.tsx`, `ScreensLayout()`
+- **Thin community `Community 31`** (2 nodes): `layout.tsx`, `AnalyticsLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 30`** (2 nodes): `layout.tsx`, `AnalyticsLayout()`
+- **Thin community `Community 32`** (2 nodes): `page.tsx`, `LineChart()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 31`** (2 nodes): `page.tsx`, `LineChart()`
+- **Thin community `Community 33`** (2 nodes): `layout.tsx`, `AnalyticsContentLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 32`** (2 nodes): `layout.tsx`, `AnalyticsContentLayout()`
+- **Thin community `Community 34`** (2 nodes): `layout.tsx`, `AnalyticsPortfolioLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 33`** (2 nodes): `layout.tsx`, `AnalyticsPortfolioLayout()`
+- **Thin community `Community 35`** (2 nodes): `layout.tsx`, `AnalyticsSocialMediaLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 34`** (2 nodes): `layout.tsx`, `AnalyticsSocialMediaLayout()`
+- **Thin community `Community 36`** (2 nodes): `layout.tsx`, `CEOCommandDashboardLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 35`** (2 nodes): `layout.tsx`, `CEOCommandDashboardLayout()`
+- **Thin community `Community 37`** (2 nodes): `layout.tsx`, `CompetitorLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 36`** (2 nodes): `layout.tsx`, `CompetitorLayout()`
+- **Thin community `Community 38`** (2 nodes): `layout.tsx`, `CompetitorAlertsLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 37`** (2 nodes): `layout.tsx`, `CompetitorAlertsLayout()`
+- **Thin community `Community 39`** (2 nodes): `page.tsx`, `CompetitorAlertsPage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 38`** (2 nodes): `page.tsx`, `CompetitorAlertsPage()`
+- **Thin community `Community 40`** (2 nodes): `layout.tsx`, `CompetitorContentGapsLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 39`** (2 nodes): `layout.tsx`, `CompetitorContentGapsLayout()`
+- **Thin community `Community 41`** (2 nodes): `layout.tsx`, `CompetitorContentIntelLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 40`** (2 nodes): `layout.tsx`, `CompetitorContentIntelLayout()`
+- **Thin community `Community 42`** (2 nodes): `layout.tsx`, `CompetitorKeywordsLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 41`** (2 nodes): `layout.tsx`, `CompetitorKeywordsLayout()`
+- **Thin community `Community 43`** (2 nodes): `layout.tsx`, `CreativeStudioLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 42`** (2 nodes): `layout.tsx`, `CreativeStudioLayout()`
+- **Thin community `Community 44`** (2 nodes): `layout.tsx`, `MarketingLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 43`** (2 nodes): `layout.tsx`, `SettingsLayout()`
+- **Thin community `Community 45`** (2 nodes): `page.tsx`, `AuditIcon()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 44`** (2 nodes): `layout.tsx`, `WarRoomLayout()`
+- **Thin community `Community 46`** (2 nodes): `_growth-sprint.tsx`, `ViralBar()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 45`** (2 nodes): `elevenlabs.ts`, `generateVoiceover()`
+- **Thin community `Community 47`** (2 nodes): `layout.tsx`, `SettingsLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 46`** (2 nodes): `utils.ts`, `cn()`
+- **Thin community `Community 48`** (2 nodes): `layout.tsx`, `WarRoomLayout()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 47`** (1 nodes): `AuthGuard.tsx`
+- **Thin community `Community 49`** (2 nodes): `elevenlabs.ts`, `generateVoiceover()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 48`** (1 nodes): `loading.tsx`
+- **Thin community `Community 50`** (2 nodes): `utils.ts`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 49`** (1 nodes): `_subnav.tsx`
+- **Thin community `Community 51`** (1 nodes): `AuthGuard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (1 nodes): `page.tsx`
+- **Thin community `Community 52`** (1 nodes): `loading.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 51`** (1 nodes): `loading.tsx`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (1 nodes): `page.tsx`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 53`** (1 nodes): `loading.tsx`
+- **Thin community `Community 53`** (1 nodes): `_subnav.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 54`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 55`** (1 nodes): `_subnav.tsx`
+- **Thin community `Community 55`** (1 nodes): `loading.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 56`** (1 nodes): `page.tsx`
+- **Thin community `Community 56`** (1 nodes): `loading.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 57`** (1 nodes): `loading.tsx`
+- **Thin community `Community 57`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 58`** (1 nodes): `loading.tsx`
+- **Thin community `Community 58`** (1 nodes): `_subnav.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 59`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 60`** (1 nodes): `loading.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (1 nodes): `agent-skills.ts`
+- **Thin community `Community 61`** (1 nodes): `_community.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (1 nodes): `growth-loops.ts`
+- **Thin community `Community 62`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (1 nodes): `supabase-client.ts`
+- **Thin community `Community 63`** (1 nodes): `loading.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (1 nodes): `supabase.ts`
+- **Thin community `Community 64`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (1 nodes): `types.ts`
+- **Thin community `Community 65`** (1 nodes): `loading.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (1 nodes): `Wait for server to be ready by polling the port.`
+- **Thin community `Community 66`** (1 nodes): `agent-skills.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 67`** (1 nodes): `growth-loops.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 68`** (1 nodes): `supabase-client.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 69`** (1 nodes): `supabase.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 70`** (1 nodes): `types.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 71`** (1 nodes): `Wait for server to be ready by polling the port.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `POST()` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 11`, `Community 13`, `Community 14`, `Community 19`?**
-  _High betweenness centrality (0.247) - this node is a cross-community bridge._
+- **Why does `POST()` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 7`, `Community 8`, `Community 11`, `Community 13`, `Community 18`?**
+  _High betweenness centrality (0.256) - this node is a cross-community bridge._
 - **Why does `GET()` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 7`, `Community 8`, `Community 11`?**
-  _High betweenness centrality (0.222) - this node is a cross-community bridge._
-- **Why does `now()` connect `Community 3` to `Community 0`, `Community 4`, `Community 7`, `Community 11`, `Community 13`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
-- **Are the 53 inferred relationships involving `POST()` (e.g. with `appendDailyLog()` and `getCommunitySignals()`) actually correct?**
-  _`POST()` has 53 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 56 inferred relationships involving `GET()` (e.g. with `getStrategyLog()` and `callFast()`) actually correct?**
-  _`GET()` has 56 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 16 inferred relationships involving `now()` (e.g. with `POST()` and `GET()`) actually correct?**
-  _`now()` has 16 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 8 inferred relationships involving `PATCH()` (e.g. with `.update()` and `skipEntry()`) actually correct?**
-  _`PATCH()` has 8 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.224) - this node is a cross-community bridge._
+- **Why does `now()` connect `Community 1` to `Community 0`, `Community 2`, `Community 4`, `Community 7`, `Community 11`?**
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+- **Are the 57 inferred relationships involving `POST()` (e.g. with `appendDailyLog()` and `.error()`) actually correct?**
+  _`POST()` has 57 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 59 inferred relationships involving `GET()` (e.g. with `getStrategyLog()` and `callFast()`) actually correct?**
+  _`GET()` has 59 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 19 inferred relationships involving `now()` (e.g. with `POST()` and `GET()`) actually correct?**
+  _`now()` has 19 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 10 inferred relationships involving `PATCH()` (e.g. with `.update()` and `.error()`) actually correct?**
+  _`PATCH()` has 10 INFERRED edges - model-reasoned connections that need verification._
