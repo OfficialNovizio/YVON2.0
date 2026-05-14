@@ -249,18 +249,51 @@ export async function callSynthesis(params: {
 // ─── streamSynthesis — streaming synthesis model (sonnet-tier) ────────────────
 
 export async function* streamSynthesis(params: {
-  system?:   string
-  messages:  AIMessage[]
-  maxTokens: number
+  system?:       string
+  messages:      AIMessage[]
+  maxTokens:     number
+  imageBase64?:  string
+  imageMimeType?: string
 }): AsyncGenerator<string> {
   const cfg = await loadConfig()
 
   if (cfg.protocol === 'anthropic') {
     const client = new Anthropic({ apiKey: cfg.apiKey })
+
+    // Build messages, injecting image into last user turn if provided
+    type AnthropicMsg = Parameters<typeof client.messages.stream>[0]['messages'][number]
+    let sdkMessages: AnthropicMsg[] = params.messages.map(m => ({
+      role:    m.role,
+      content: m.content,
+    }))
+
+    if (params.imageBase64 && params.imageMimeType && sdkMessages.length > 0) {
+      const last = sdkMessages[sdkMessages.length - 1]
+      if (last.role === 'user') {
+        sdkMessages = [
+          ...sdkMessages.slice(0, -1),
+          {
+            role: 'user' as const,
+            content: [
+              {
+                type:   'image' as const,
+                source: {
+                  type:       'base64' as const,
+                  media_type: params.imageMimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+                  data:       params.imageBase64,
+                },
+              },
+              { type: 'text' as const, text: last.content as string },
+            ],
+          },
+        ]
+      }
+    }
+
     const stream = client.messages.stream({
       model:      cfg.synthesisModel,
       max_tokens: params.maxTokens,
-      messages:   params.messages,
+      messages:   sdkMessages,
       ...(params.system ? { system: params.system } : {}),
     })
     for await (const event of stream) {
@@ -271,7 +304,7 @@ export async function* streamSynthesis(params: {
     return
   }
 
-  // All OpenAI-compatible providers
+  // All OpenAI-compatible providers (image passed as text note via prompt)
   yield* oaiStream(
     cfg.baseUrl,
     cfg.apiKey,

@@ -28,6 +28,22 @@
     {
       "path": "/api/growth/cleanup",
       "schedule": "0 3 * * 1"
+    },
+    {
+      "path": "/api/reports/generate?type=analytics",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/reports/generate?type=marketing",
+      "schedule": "30 6 * * *"
+    },
+    {
+      "path": "/api/reports/generate?type=competitor",
+      "schedule": "0 7 * * 1,3,5"
+    },
+    {
+      "path": "/api/content-intelligence",
+      "schedule": "30 7 * * 1,3,5"
     }
   ]
 }

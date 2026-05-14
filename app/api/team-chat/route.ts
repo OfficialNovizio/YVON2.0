@@ -154,7 +154,8 @@ async function getSpecialistBriefing(
   message: string,
   ventureName: string,
   taskOverride?: string,
-  githubContext?: string
+  githubContext?: string,
+  imageNote?: string,
 ): Promise<SpecialistBriefing> {
   const agent = getAgent(agentId)
   if (!agent) return { agentId, content: '' }
@@ -201,7 +202,7 @@ async function getSpecialistBriefing(
     maxTokens: 800,
     messages: [{
       role: 'user',
-      content: `Venture: ${ventureName}\n\n${taskPrompt}\n\nRespond in 100–150 words max. Be specific and actionable.\n\n---HANDOFF---\nsummary: [1 sentence]\ntype: strategy\nkey_output: [deliverable]\nconfidence: high\n---END---`,
+      content: `Venture: ${ventureName}\n\n${taskPrompt}${imageNote ?? ''}\n\nRespond in 100–150 words max. Be specific and actionable.\n\n---HANDOFF---\nsummary: [1 sentence]\ntype: strategy\nkey_output: [deliverable]\nconfidence: high\n---END---`,
     }],
   })
   return { agentId, content }
@@ -215,11 +216,12 @@ async function getSpecialistWithRetry(
   ventureName: string,
   taskOverride: string | undefined,
   emit: (type: string, data: Record<string, unknown>) => void,
-  githubContext?: string
+  githubContext?: string,
+  imageNote?: string,
 ): Promise<SpecialistBriefing> {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const briefing = await getSpecialistBriefing(agentId, message, ventureName, taskOverride, githubContext)
+      const briefing = await getSpecialistBriefing(agentId, message, ventureName, taskOverride, githubContext, imageNote)
       emit('agent_complete', {
         agentId,
         previewText: briefing.content.slice(0, 120),
@@ -307,7 +309,8 @@ async function executeSequential(
   ventureName: string,
   executionPlan: ExecutionPlan | null,
   emit: (type: string, data: Record<string, unknown>) => void,
-  githubContext?: string
+  githubContext?: string,
+  imageNote?: string,
 ): Promise<{ briefings: SpecialistBriefing[]; stepResults: StepResult[] }> {
   const briefings: SpecialistBriefing[] = []
   const stepResults: StepResult[] = []
@@ -330,7 +333,7 @@ async function executeSequential(
       ? `${task ?? message}\n\nHandoff context from previous specialist:\n${handoffContext}`
       : task
 
-    const briefing = await getSpecialistWithRetry(agentId, message, ventureName, taskWithContext, emit, githubContext)
+    const briefing = await getSpecialistWithRetry(agentId, message, ventureName, taskWithContext, emit, githubContext, imageNote)
     briefings.push(briefing)
     stepResults.push({
       agentId,
@@ -363,16 +366,25 @@ export async function POST(request: Request): Promise<Response> {
   let message: string
   let ventureName: string
   let githubContext: string | undefined
+  let imageBase64:  string | undefined
+  let imageMimeType: string | undefined
+  let conversationHistory: Array<{ user: string; marcus: string }>
   try {
     const body = await request.json() as {
       message?: string
       ventureId?: string
       ventureName?: string
       githubContext?: string
+      imageBase64?: string
+      imageMimeType?: string
+      conversationHistory?: Array<{ user: string; marcus: string }>
     }
-    message       = body.message ?? ''
-    ventureName   = body.ventureName ?? 'Novizio'
-    githubContext = body.githubContext
+    message             = body.message ?? ''
+    ventureName         = body.ventureName ?? 'Novizio'
+    githubContext       = body.githubContext
+    imageBase64         = body.imageBase64
+    imageMimeType       = body.imageMimeType
+    conversationHistory = body.conversationHistory ?? []
   } catch {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
@@ -421,10 +433,17 @@ export async function POST(request: Request): Promise<Response> {
             routing: { intent: 'direct', specialists: [] },
           })
 
+          const directHistoryBlock = conversationHistory.length > 0
+            ? `\n\nPrior conversation:\n${conversationHistory.map(h => `User: ${h.user}\nMarcus: ${h.marcus.slice(0, 200)}…`).join('\n\n')}`
+            : ''
+          const directImageNote = imageBase64 ? `\n\n[The user attached an image — analyze it visually as part of your reply.]` : ''
+
           let directSynthesis = ''
           for await (const chunk of streamSynthesis({
             maxTokens: 1500,
-            messages: [{ role: 'user', content: `You are Marcus, CEO of YVON (venture: ${ventureName}). The user said: "${message}"\n\nReply naturally and concisely as Marcus. No agent delegation needed.` }],
+            imageBase64,
+            imageMimeType,
+            messages: [{ role: 'user', content: `You are Marcus, CEO of YVON (venture: ${ventureName}). The user said: "${message}"${directImageNote}${directHistoryBlock}\n\nReply naturally and concisely as Marcus. No agent delegation needed.` }],
           })) {
             directSynthesis += chunk
             emit('text', { content: chunk })
@@ -481,6 +500,9 @@ export async function POST(request: Request): Promise<Response> {
 
         // ── Step 3: Specialist execution (parallel or sequential) ───────────
         const useSequential = executionPlan.order === 'sequential' && routing.specialists.length > 1
+        const imageNote = imageBase64
+          ? `\n\n[Context: The user attached an image (${imageMimeType ?? 'image'}). Marcus will analyze it visually in synthesis — factor in that this may be a visual/design/reference asset.]`
+          : undefined
 
         let briefings: SpecialistBriefing[]
         let stepResults: StepResult[]
@@ -492,7 +514,8 @@ export async function POST(request: Request): Promise<Response> {
             ventureName,
             executionPlan,
             emit,
-            githubContext
+            githubContext,
+            imageNote,
           )
           briefings   = result.briefings
           stepResults = result.stepResults
@@ -512,7 +535,7 @@ export async function POST(request: Request): Promise<Response> {
               })
               emit('agent_start', { agentId, task: task ?? '' })
 
-              const briefing = await getSpecialistWithRetry(agentId, message, ventureName, task, emit, githubContext)
+              const briefing = await getSpecialistWithRetry(agentId, message, ventureName, task, emit, githubContext, imageNote)
               parallelStepResults.push({
                 agentId,
                 taskBrief:     task ?? null,
@@ -551,18 +574,27 @@ export async function POST(request: Request): Promise<Response> {
           ? `\nExecution objective: ${executionPlan.objective}\nDefinition of done: ${executionPlan.definition_of_done}\n`
           : ''
 
+        const historyBlock = conversationHistory.length > 0
+          ? `\n\nPrior conversation context:\n${conversationHistory.map(h => `User: ${h.user}\nMarcus: ${h.marcus.slice(0, 200)}…`).join('\n\n')}`
+          : ''
+        const ceoImageNote = imageBase64
+          ? `\n\n[The user attached an image — analyze it visually as part of your synthesis.]`
+          : ''
+
         const ceoPrompt = `You are Marcus, CEO of YVON. Venture: ${ventureName}
 
 Specialists delivered:
 ${briefingText}
 
-User: ${message}
+User: ${message}${ceoImageNote}${historyBlock}
 
 Give a concise unified response in 150 words max. Start with: "The one thing I don't know here is..." then your recommendation.`
 
         let ceoSynthesis = ''
         for await (const chunk of streamSynthesis({
           maxTokens: 2000,
+          imageBase64,
+          imageMimeType,
           messages: [{ role: 'user', content: ceoPrompt }],
         })) {
           ceoSynthesis += chunk
