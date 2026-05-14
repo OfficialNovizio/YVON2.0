@@ -6,7 +6,7 @@ import AnalyticsSubNav from '../_subnav';
 export default function AnalyticsPortfolioPage() {
   const router = useRouter();
   return (
-    <main className="pt-14 pb-24 bg-black text-[#e2e2e2] min-h-screen">
+    <main className="pt-14 pb-24 min-h-screen" style={{ color: '#eef0f8' }}>
       <AnalyticsSubNav />
 
       {/* Signal Strip */}
@@ -19,7 +19,7 @@ export default function AnalyticsPortfolioPage() {
           </div>
           <div className="flex items-center gap-2 bg-black/40 rounded-full px-3 py-1 border border-white/5 whitespace-nowrap">
             <div className="w-1.5 h-1.5 rounded-full bg-[#0071e3]" />
-            <span className="text-[11px] font-medium text-white/90">YouTube Anomaly Detected</span>
+            <span className="text-[11px] font-medium text-white/90">Hourbour funnel conversion −8pts vs Q3</span>
           </div>
         </div>
       </div>
@@ -28,7 +28,7 @@ export default function AnalyticsPortfolioPage() {
 
         {/* Intelligence Hero */}
         <section className="rounded-[24px] overflow-hidden relative min-h-[380px] flex flex-col justify-between p-8 md:p-12"
-          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(40px) saturate(200%)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          className="ana-glass" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(28px) saturate(150%) brightness(1.08)', border: '1px solid rgba(255,255,255,0.10)' }}>
           <div className="absolute inset-0 opacity-40 mix-blend-screen pointer-events-none"
             style={{ background: 'radial-gradient(circle at 70% 50%, rgba(0,113,227,0.15), transparent 60%)' }} />
           <div className="absolute inset-0 opacity-20"
@@ -41,8 +41,8 @@ export default function AnalyticsPortfolioPage() {
               </h1>
               <p className="text-[17px] text-white/70 max-w-lg mb-8 leading-relaxed"
                 style={{ letterSpacing: '-0.01em' }}>
-                Overall brand health is stable. Novizio engagement offset by Delta&apos;s targeted ad fatigue.
-                Rebalancing recommended for optimal ROI.
+                Novizio leads the stack. Hourbour funnel needs reinforcement — 8pts below Q3 target.
+                Content rebalancing recommended.
               </p>
               <button
                 onClick={() => router.push('/screens/war-room?q=Marcus%2C+rebalance+the+portfolio+—+Novizio+is+overloaded+and+Hourbour+has+funnel+gaps.+What+are+the+top+3+reallocation+decisions%3F')}
@@ -54,14 +54,14 @@ export default function AnalyticsPortfolioPage() {
             </div>
             <div className="flex flex-row md:flex-col gap-4 self-start md:self-end">
               <div className="rounded-2xl p-4 min-w-[140px]"
-                style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="text-[12px] text-white/50 mb-1">Composite Health</div>
                 <div className="text-[32px] font-medium text-white" style={{ letterSpacing: '-0.02em' }}>
                   88<span className="text-[16px] text-white/40">/100</span>
                 </div>
               </div>
               <div className="rounded-2xl p-4 min-w-[140px]"
-                style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="text-[12px] text-white/50 mb-1">Risk Index</div>
                 <div className="text-[32px] font-medium text-white" style={{ letterSpacing: '-0.02em' }}>Low</div>
               </div>
@@ -73,13 +73,13 @@ export default function AnalyticsPortfolioPage() {
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'Novizio', value: 94, sub: '+2.4 pts this week', icon: 'trending_up', iconColor: '#0071e3', border: false },
-            { label: 'Hourbour', value: 82, sub: 'Stable', icon: 'trending_flat', iconColor: 'rgba(255,255,255,0.4)', border: false },
-            { label: 'Delta', value: 76, sub: '-1.2 pts this week', icon: 'trending_down', iconColor: '#ffb4ab', border: false },
-            { label: 'Target', value: 90, sub: 'Q3 Goal', icon: 'flag', iconColor: '#0071e3', border: true },
+            { label: 'Hourbour', value: 82, sub: '−8pts below Q3', icon: 'trending_down', iconColor: '#ffb4ab', border: false },
+            { label: 'Industry Avg', value: 78, sub: 'DTC Benchmark', icon: 'bar_chart', iconColor: 'rgba(255,255,255,0.4)', border: false },
+            { label: 'Q3 Target', value: 90, sub: 'Brand goal', icon: 'flag', iconColor: '#0071e3', border: true },
           ].map((m) => (
             <div key={m.label}
               className="rounded-[20px] p-5 hover:bg-white/[0.02] transition-colors cursor-pointer relative overflow-hidden"
-              style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
               {m.border && <div className="absolute inset-0 border-2 border-[#0071e3]/20 rounded-[20px] pointer-events-none" />}
               <div className="flex justify-between items-center mb-6 relative z-10">
                 <span className="text-[14px] font-medium text-white/80">{m.label}</span>
@@ -96,7 +96,7 @@ export default function AnalyticsPortfolioPage() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Radar Module */}
           <div className="rounded-[24px] p-6 flex flex-col md:col-span-1 min-h-[340px]"
-            style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <h3 className="text-[16px] font-medium text-white mb-2">Growth vs Engagement</h3>
             <p className="text-[13px] text-white/50 mb-8">Relative matrix across portfolio</p>
             <div className="flex-1 flex items-center justify-center relative">
@@ -117,7 +117,7 @@ export default function AnalyticsPortfolioPage() {
 
           {/* Performance Stack */}
           <div className="rounded-[24px] p-6 flex flex-col md:col-span-1 min-h-[340px]"
-            style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <h3 className="text-[16px] font-medium text-white mb-2">Performance Stack</h3>
             <p className="text-[13px] text-white/50 mb-6">Contribution by brand</p>
             <div className="flex-1 flex items-end gap-4 px-4 h-full pt-8">
@@ -133,23 +133,16 @@ export default function AnalyticsPortfolioPage() {
                 <div className="w-full bg-white/40 h-[10%] rounded-b-sm" />
                 <div className="text-[11px] text-white/40 text-center mt-2">HRB</div>
               </div>
-              <div className="flex-1 flex flex-col justify-end h-full gap-1">
-                <div className="w-full bg-white/5 rounded-t-sm h-[50%]" />
-                <div className="w-full bg-[#ffb4ab]/20 h-[20%]" />
-                <div className="w-full bg-[#ffb4ab]/40 h-[15%] rounded-b-sm" />
-                <div className="text-[11px] text-white/40 text-center mt-2">DLT</div>
-              </div>
             </div>
             <div className="mt-6 pt-4 border-t border-white/5 flex items-start gap-3">
-              <img
-                alt="Marcus"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDreMChF3yR6yGUIGUA6DQoxV29o3xtxXK0xm7rXyKKrpHvcXgTSDz7VY284CVBSNzuoxjRnrD38wzLKja4zHdAeeJEuGniRH6tJkDmZQsyhkbepQv3wwJnBEufvCjG0QeG-xrJraxOJYyiMnvyPI7MGVB4aODYoa6GjdAV1daxMzIsN9MQKA_eYjY1AuZwYD-eksrXiPlhN5rJjv2TLBQxCC9HgTFtFRs3Ir0qOca-qY32rZQlLfVyAvsc-7kQi7kv6P43OQPRTnpU"
-                className="w-8 h-8 rounded-full grayscale opacity-80 object-cover shrink-0"
-              />
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0"
+                style={{ background: 'rgba(0,102,204,0.20)', border: '1px solid rgba(0,102,204,0.35)', color: '#5ba8ff', fontFamily: 'InstrumentSans, Inter, sans-serif' }}>
+                M
+              </div>
               <div>
                 <div className="text-[12px] font-medium text-white/90">Marcus (Strategist)</div>
                 <div className="text-[12px] text-white/60 leading-snug mt-0.5">
-                  Novizio carrying the stack. Consider re-allocating Delta spend to bolster Harbour mid-funnel.
+                  Novizio carrying the stack. Re-allocate content bandwidth to bolster Hourbour mid-funnel.
                 </div>
               </div>
             </div>
@@ -157,7 +150,7 @@ export default function AnalyticsPortfolioPage() {
 
           {/* 8-Week Trend */}
           <div className="rounded-[24px] p-6 flex flex-col md:col-span-1 min-h-[340px]"
-            style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex justify-between items-start mb-2">
               <h3 className="text-[16px] font-medium text-white">8-Week Trend</h3>
               <div className="flex items-center gap-1.5 bg-white/5 rounded-full px-2.5 py-1">
@@ -265,7 +258,7 @@ export default function AnalyticsPortfolioPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Volume & Mix */}
             <div className="rounded-[24px] p-6 md:p-8"
-              style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <h3 className="text-[14px] font-medium text-white mb-6">Volume &amp; Mix</h3>
               <div className="space-y-6">
                 <div>
@@ -315,7 +308,7 @@ export default function AnalyticsPortfolioPage() {
 
             {/* Dimension Contribution */}
             <div className="rounded-[24px] p-6 md:p-8"
-              style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
               <h3 className="text-[14px] font-medium text-white mb-6">Dimension Contribution</h3>
               <div className="w-full text-left">
                 <div className="flex text-[11px] text-white/40 uppercase tracking-wider mb-3 pb-2 border-b border-white/10">
@@ -354,7 +347,7 @@ export default function AnalyticsPortfolioPage() {
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Rebalance Plan */}
           <div className="lg:col-span-2 rounded-[24px] p-6 md:p-8"
-            style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center gap-2 mb-6">
               <span className="material-symbols-outlined text-[20px] text-[#0071e3]">route</span>
               <h2 className="text-[18px] font-semibold text-white" style={{ letterSpacing: '-0.02em' }}>Portfolio Rebalance Plan</h2>
@@ -398,7 +391,7 @@ export default function AnalyticsPortfolioPage() {
 
           {/* Risk Watchlist */}
           <div className="lg:col-span-1 rounded-[24px] p-6 md:p-8 flex flex-col"
-            style={{ background: 'rgba(31,31,31,0.4)', backdropFilter: 'blur(24px) saturate(180%)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(24px) saturate(150%)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center gap-2 mb-6">
               <span className="material-symbols-outlined text-[20px] text-[#ffb4ab]">warning</span>
               <h2 className="text-[18px] font-semibold text-white" style={{ letterSpacing: '-0.02em' }}>Risk Watchlist</h2>
@@ -444,7 +437,10 @@ export default function AnalyticsPortfolioPage() {
             <div className="w-full md:w-[320px] p-6 md:p-8 flex flex-col justify-center bg-white/[0.02]">
               <div className="text-[11px] text-white/40 uppercase tracking-wider font-medium mb-3">Next Move</div>
               <h3 className="text-[16px] font-medium text-white mb-4">Ready to execute plan?</h3>
-              <button className="w-full bg-[#0071e3] text-white px-4 py-3 rounded-xl text-[14px] font-medium hover:bg-[#005cbb] transition-colors flex items-center justify-center gap-2 active:scale-95">
+              <button
+                onClick={() => router.push('/screens/war-room?q=Execute+portfolio+rebalance+plan%3A+shift+content+capacity+to+Hourbour%2C+reallocate+LinkedIn+spend+to+TikTok%2C+raise+health+threshold+to+70')}
+                className="w-full bg-[#0071e3] text-white px-4 py-3 rounded-xl text-[14px] font-medium hover:bg-[#005cbb] transition-colors flex items-center justify-center gap-2 active:scale-95"
+              >
                 <span>Rebalance Now</span>
                 <span className="material-symbols-outlined text-[18px]">bolt</span>
               </button>
@@ -457,7 +453,7 @@ export default function AnalyticsPortfolioPage() {
       {/* Footer */}
       <footer className="w-full border-t border-white/10 bg-black/50 py-8">
         <div className="max-w-[980px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-[12px] text-white/40">© 2024 YVON Intelligence. All rights reserved.</div>
+          <div className="text-[12px] text-white/40">© 2026 YVON Intelligence. All rights reserved.</div>
           <div className="flex items-center gap-6 text-[12px] text-white/40">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>

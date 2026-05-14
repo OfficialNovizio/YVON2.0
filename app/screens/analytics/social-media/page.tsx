@@ -116,7 +116,7 @@ export default function SocialMediaPage() {
   const priorityStyle = { critical: 'bg-red-500/15 text-red-400', high: 'bg-orange-500/15 text-orange-400', medium: 'bg-white/10 text-white/60' };
 
   return (
-    <main className="pt-14 pb-24 bg-black text-[#f5f5f7] min-h-screen antialiased">
+    <main className="pt-14 pb-24 min-h-screen antialiased" style={{ color: '#eef0f8' }}>
       <AnalyticsSubNav />
 
       <div className="px-6 max-w-[1200px] mx-auto pt-8 flex flex-col gap-12">
@@ -138,7 +138,7 @@ export default function SocialMediaPage() {
           </div>
 
           {briefLoading && (
-            <div className="bg-[#111111] border border-white/[0.06] rounded-[20px] p-8 flex flex-col gap-4">
+            <div className="ana-glass rounded-[20px] p-8 flex flex-col gap-4">
               <Shimmer className="h-4 w-3/4" />
               <Shimmer className="h-4 w-2/3" />
               <Shimmer className="h-4 w-1/2" />
@@ -152,7 +152,7 @@ export default function SocialMediaPage() {
           )}
 
           {!briefLoading && !briefError && brief && (
-            <div className="bg-[#111111] border border-white/[0.06] rounded-[20px] p-8 flex flex-col gap-6">
+            <div className="ana-glass rounded-[20px] p-8 flex flex-col gap-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
                   { label: 'Situation', icon: 'analytics',   text: brief.brief?.situation ?? '…',  accent: 'text-white' },
@@ -189,16 +189,15 @@ export default function SocialMediaPage() {
             <p className="text-[12px] text-white/40 mt-0.5">Novizio baseline vs competitor benchmarks · connect a platform to start tracking</p>
           </div>
 
-          <div className="bg-[#111111] border border-white/[0.06] rounded-[20px] overflow-hidden">
+          <div className="ana-glass rounded-[20px] overflow-hidden">
             <table className="w-full text-left text-[13px]">
               <thead className="border-b border-white/5">
                 <tr className="text-[10px] font-bold uppercase tracking-wider text-white/30">
                   <th className="px-6 py-4">Platform</th>
-                  <th className="px-5 py-4">Followers</th>
-                  <th className="px-5 py-4">Eng Rate</th>
-                  <th className="px-5 py-4">Reach</th>
-                  <th className="px-5 py-4">Conv Rate</th>
-                  <th className="px-5 py-4">Growth</th>
+                  <th className="px-5 py-4">Your Status</th>
+                  <th className="px-5 py-4">Your Target</th>
+                  <th className="px-5 py-4">Eng Benchmark</th>
+                  <th className="px-5 py-4">Best Competitor</th>
                   <th className="px-5 py-4 text-center">Health</th>
                   <th className="px-5 py-4"></th>
                 </tr>
@@ -212,28 +211,39 @@ export default function SocialMediaPage() {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
                           <span className="material-symbols-outlined text-[20px]" style={{ color: p.iconColor }}>{p.icon}</span>
-                          <span className="text-white font-medium">{p.name}</span>
+                          <span className="text-white font-medium" style={{ fontFamily: 'InstrumentSans, Inter, sans-serif' }}>{p.name}</span>
                         </div>
                       </td>
-                      {[
-                        { you: p.followers === 0 ? '—' : fmt(p.followers), bench: fmt(bench.followers), label: topComp.name },
-                        { you: p.engRate === 0 ? '—' : `${p.engRate}%`,    bench: `${bench.engRate}%`,  label: topComp.name },
-                        { you: p.reach === 0 ? '—' : fmt(p.reach),         bench: '–',                  label: '' },
-                        { you: p.convRate === 0 ? '—' : `${p.convRate}%`,  bench: '–',                  label: '' },
-                        { you: p.growthVelocity === 0 ? '—' : `${p.growthVelocity > 0 ? '+' : ''}${p.growthVelocity}%`, bench: '–', label: '' },
-                      ].map((cell, ci) => (
-                        <td key={ci} className="px-5 py-5">
-                          <span className={`text-[14px] font-medium block ${cell.you === '—' ? 'text-white/20' : 'text-white'}`}>
-                            {cell.you}
-                          </span>
-                          {cell.bench !== '–' && <BenchmarkBadge value={cell.bench} label={cell.label} />}
-                        </td>
-                      ))}
-                      <td className="px-5 py-5 text-center">
-                        <HealthDot score="empty" />
+                      <td className="px-5 py-5">
+                        <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                          style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(238,240,248,0.35)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'InstrumentSans, Inter, sans-serif' }}>
+                          Not started
+                        </span>
                       </td>
                       <td className="px-5 py-5">
-                        <button className="opacity-0 group-hover:opacity-100 transition-opacity text-[11px] font-medium bg-[#0066cc]/15 text-[#0066cc] hover:bg-[#0066cc]/25 px-3 py-1.5 rounded-lg active:scale-95 whitespace-nowrap">
+                        <span className="text-[13px] font-medium" style={{ fontFamily: 'ui-monospace, "Geist Mono", monospace', color: 'rgba(238,240,248,0.55)' }}>
+                          {fmt(bench.followers)}
+                        </span>
+                        <span className="text-[10px] block mt-0.5" style={{ color: 'rgba(238,240,248,0.25)', fontFamily: 'InstrumentSans, Inter, sans-serif' }}>Zara target</span>
+                      </td>
+                      <td className="px-5 py-5">
+                        <span className="text-[13px] font-medium" style={{ fontFamily: 'ui-monospace, "Geist Mono", monospace', color: 'rgba(238,240,248,0.55)' }}>
+                          {bench.engRate}%
+                        </span>
+                        <span className="text-[10px] block mt-0.5" style={{ color: 'rgba(238,240,248,0.25)', fontFamily: 'InstrumentSans, Inter, sans-serif' }}>Zara benchmark</span>
+                      </td>
+                      <td className="px-5 py-5">
+                        <span className="text-[12px]" style={{ color: 'rgba(238,240,248,0.40)', fontFamily: 'InstrumentSans, Inter, sans-serif' }}>Zara</span>
+                      </td>
+                      <td className="px-5 py-5 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <HealthDot score="empty" />
+                          <span className="text-[9px]" style={{ color: 'rgba(238,240,248,0.25)', fontFamily: 'InstrumentSans, Inter, sans-serif' }}>Connect</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-5">
+                        <button className="text-[11px] font-medium bg-[#0066cc]/15 text-[#0066cc] hover:bg-[#0066cc]/25 px-3 py-1.5 rounded-lg active:scale-95 whitespace-nowrap transition-colors"
+                          style={{ fontFamily: 'InstrumentSans, Inter, sans-serif' }}>
                           Connect
                         </button>
                       </td>
@@ -245,7 +255,7 @@ export default function SocialMediaPage() {
           </div>
 
           {/* Competitive Pulse Strip */}
-          <div className="bg-[#111111] border border-white/[0.06] rounded-[16px] px-6 py-4 flex items-center gap-6 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <div className="ana-glass rounded-[16px] px-6 py-4 flex items-center gap-6 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
             <span className="text-[10px] font-bold uppercase tracking-wider text-white/30 shrink-0">Competitor Pulse</span>
             {COMPETITORS.map(c => (
               <div key={c.name} className="flex items-center gap-3 shrink-0">
@@ -333,7 +343,7 @@ export default function SocialMediaPage() {
             <p className="text-[12px] text-white/40 mt-0.5">Your data (—) vs competitor benchmark · green cell = high opportunity for you</p>
           </div>
 
-          <div className="bg-[#111111] border border-white/[0.06] rounded-[20px] overflow-hidden">
+          <div className="ana-glass rounded-[20px] overflow-hidden">
             <table className="w-full text-[12px] text-left">
               <thead className="border-b border-white/5">
                 <tr className="text-[10px] font-bold uppercase tracking-wider text-white/30">
@@ -410,7 +420,7 @@ export default function SocialMediaPage() {
                 benchLeader: 'ASOS: 22% overlap',
               },
             ].map(card => (
-              <div key={card.label} className="bg-[#111111] border border-white/[0.06] rounded-[18px] p-6 flex flex-col gap-4">
+              <div key={card.label} className="ana-glass rounded-[18px] p-6 flex flex-col gap-4">
                 <div className="flex justify-between items-start">
                   <span className="material-symbols-outlined text-[22px] text-[#0066cc]">{card.icon}</span>
                   <span className="text-[10px] text-white/25 bg-white/5 px-2 py-1 rounded-full">target: {card.target}</span>
@@ -489,7 +499,7 @@ export default function SocialMediaPage() {
           )}
 
           {!briefLoading && !briefError && brief?.prescription && (
-            <div className="bg-[#111111] border border-white/[0.06] rounded-[20px] p-3 flex flex-col divide-y divide-white/[0.04]">
+            <div className="ana-glass rounded-[20px] p-3 flex flex-col divide-y divide-white/[0.04]">
               {brief.prescription.map((action) => (
                 <div key={action.rank} className="p-5 flex flex-col md:flex-row items-start md:items-center gap-5 hover:bg-white/[0.02] transition-colors rounded-xl group">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[13px] shrink-0 ${
@@ -527,7 +537,7 @@ export default function SocialMediaPage() {
           )}
 
           {!briefLoading && (briefError || !brief?.prescription) && (
-            <div className="bg-[#111111] border border-white/[0.06] rounded-[20px] p-8 flex flex-col items-center gap-3 text-center">
+            <div className="ana-glass rounded-[20px] p-8 flex flex-col items-center gap-3 text-center">
               <span className="material-symbols-outlined text-[32px] text-white/20">auto_awesome</span>
               <p className="text-white/40 text-[13px]">Kai&apos;s prescription is unavailable. Check your AI provider in Settings.</p>
             </div>
@@ -537,7 +547,7 @@ export default function SocialMediaPage() {
       </div>
 
       <footer className="mt-12 border-t border-white/[0.04] py-8 px-6 max-w-[1200px] mx-auto flex justify-between items-center text-[12px] text-white/20">
-        <span>© 2026 YVON Intelligence. All rights reserved.</span>
+        <span style={{ fontFamily: 'InstrumentSans, Inter, sans-serif' }}>© 2026 YVON Analytics. All rights reserved.</span>
         <div className="flex gap-6">
           {['Privacy', 'Terms', 'Support'].map(l => (
             <a key={l} href="#" className="hover:text-white/40 transition-colors">{l}</a>
