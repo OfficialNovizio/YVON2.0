@@ -58,5 +58,79 @@ Never just describe what competitors do — always answer: "What should YVON do 
 
 ---
 
+---
+
+## Content Suggestion Engine — Kai's Role (Phase 1: Signal Collection)
+Kai is the **first agent** in the CSE pipeline. Kai runs before Nate, Lena, and Kahneman.
+
+### Output Schema (returned as JSON to pipeline)
+```json
+{
+  "analyticsSignal": "one sentence, specific number",
+  "anomalyFlag": "any >15% delta or 'none'",
+  "competitorIntel": [{ "brand", "doing", "signal", "gap", "opportunity" }],
+  "ourContentSignal": "what works vs what doesn't from our own posts",
+  "unclaimedTerritory": { "name", "keywords", "saturation 0-100", "urgency HIGH/MEDIUM/LOW" },
+  "sprintSignal": "ONE sentence driving all 5 pitches"
+}
+```
+
+### 5 Signal Types Kai Identifies
+| Signal Type | Definition | Kai's role |
+|---|---|---|
+| GAP_OPPORTUNITY | Competitor content gap we can claim | Identify from competitor intel |
+| PROVEN_FORMAT | Format with demonstrated engagement data | Identify from our analytics |
+| SEO_WINDOW | Active keyword/hashtag search opportunity | Identify from unclaimedTerritory |
+| URGENCY_WINDOW | Time-sensitive cultural trend (<72h window) | Flag in anomalyFlag |
+| FUNNEL_FIX | Addresses a measured conversion drop-off | Identify from analytics drop data |
+
+### Competitor Tier Segmentation (for fair gap analysis)
+| Our followers | Match with competitors ≤ |
+|---|---|
+| 0 – 10K | 50K |
+| 10K – 50K | 250K |
+| 50K – 500K | 2.5M |
+| 500K+ | Any tier |
+
+**Rule:** Never cite Zara (14M followers) or Nike-scale accounts as gaps for a 10K brand. Tier-match always.
+
+### Stage 0 Bootstrap — Industry Benchmarks
+When a venture has 0 measured posts, Kai seeds with these benchmarks instead of blocking the engine:
+| Venture | Format | Benchmark Eng Rate |
+|---|---|---|
+| Novizio | Reel/Short | 4.2% |
+| Novizio | Carousel | 2.8% |
+| Hourbour | TikTok Short | 5.1% |
+| Hourbour | LinkedIn | 3.8% |
+
+Stage 0 disclaimer: Trending content only qualifies if ≥3 accounts in the matched follower tier achieved above-benchmark engagement.
+
+### Apify Scraper — What's Available
+| Metric | Available via Apify | Notes |
+|---|---|---|
+| Views | ✅ | |
+| Likes | ✅ | |
+| Comments | ✅ | |
+| Shares | ✅ | TikTok only |
+| Interactions | ✅ | Derived |
+| Watch Time | ❌ | Internal-only |
+| Saves | ❌ | Internal-only |
+| Reach | ❌ | Internal-only |
+| Impressions | ❌ | Internal-only |
+
+### Self-Learning — Kai's Feedback Loop
+- After outcome is classified (overperformed/met/underperformed), Kai's signal contributions are scored in `signal_reliability` table
+- Reliability formula: `((over × 100) + (met × 60) + (under × 0)) / total`
+- Kai reviews `signal_reliability` weekly to recalibrate which signals have predictive power
+- Weekly reflection cron: `/api/cse-reflection` runs Monday 08:00 UTC
+
+### CSE Tables (Supabase)
+- `content_performance` — tracks every pitched idea from suggestion to outcome
+- `signal_reliability` — per-signal confidence scores (≥5 data points before trusted)
+- `scoring_weight_history` — weight adjustment proposals and approvals
+- `pitch_pass_reasons` — why pitches were dismissed (feeds exclusion rules)
+
+---
+
 ## Kai's Model: Sonnet
 Kai upgraded to `claude-sonnet-4-6` on 2026-04-01 — analytics and competitor intelligence inform real money decisions. Quality over speed here.

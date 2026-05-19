@@ -7,12 +7,16 @@
 ---
 
 ## Active Right Now
-- **Status:** Sessions 1 + 2 + 3 + 4 COMPLETE ✅ — Full pipeline shipped
+- **Status:** Content Suggestion Engine (CSE) COMPLETE ✅ — full self-learning pipeline shipped
 - **Waiting for Stark:**
-  1. Run migration 021 in Supabase SQL Editor (`supabase/migrations/021_clothing_items.sql`) — needed for Outfit Builder
-  2. Fill in Big Idea for Novizio in Settings → Venture → Content DNA tab
-  3. Click Generate on Marketing → Content tab → approve a pitch → click Studio icon → Storyline mode → Build Outfits
-- **Next session:** Merchandize screen — wire Products tab to `clothing_items` table (CRUD UI)
+  1. Run migration 022 in Supabase SQL Editor (`supabase/migrations/022_content_suggestion_engine.sql`) — required for CSE tables
+  2. Run migration 021 if not yet done (`supabase/migrations/021_clothing_items.sql`) — needed for Outfit Builder
+  3. Fill in Big Idea for Novizio in Settings → Venture → Content DNA tab
+  4. Click Generate on Marketing → Content tab — new rich pitch cards with A/B hooks, signal type, E/R/G/B/T bars
+- **Next session options (pick one):**
+  1. Creative Studio Phase 2 — CSE closed loop (5 gaps: pitch→content_performance record, schedule→calendar_entry_id write-back, Measure Now modal, outcome banner in Studio, CSE skill file)
+  2. Demo data for Analytics, Marketing, Competitor dashboards
+  3. Merchandize screen — wire Products tab to `clothing_items` CRUD
 
 ---
 
@@ -27,6 +31,7 @@
 
 | Date | Agent(s) | Task | Outcome | Next Step |
 |------|---------|------|---------|-----------|
+| 2026-05-19 | Kai, Nate, Lena, Kahneman | Content Suggestion Engine (CSE) | Migration 022 (4 tables: content_performance, signal_reliability, scoring_weight_history, pitch_pass_reasons). Routes: /api/content-performance (POST/GET/PATCH), /api/signal-reliability, /api/weight-proposal, /api/content-performance/measure (cron), /api/cse-reflection (cron). Extended /api/content-intelligence with CSE fields (signalType, growthHypothesis, scoreBreakdown, cseScore in fullProposal). Marketing > Content tab redesigned: 5-pitch full-width cards, hook A/B toggle, 3-col info strip, E/R/G/B/T bar chart, growth hypothesis accordion, weight proposal panel, stage 0/1 banner, pass reason modal. All 4 agent MEMORY.md files updated. TypeScript zero errors. | Run migration 022 in Supabase SQL Editor |
 | 2026-05-16 | Atlas, Pixel | Creative Studio Session 4 — Outfit Builder | migration 021 (`clothing_items`), `lib/clothing.ts` (getClothingItems + auto-seed 13 Novizio defaults), `GET/POST/PATCH /api/clothing-items`, `generate-outfits` action (Atlas assigns top/bottom/outerwear/footwear/accessory + heroItem per scene from active clothing line), Outfit Builder UI in Storyline step (garment grid cards, hero star badge, regenerate). TypeScript zero errors. | Run migration 021 in Supabase SQL Editor |
 | 2026-05-16 | Atlas, Lena, Pixel, Mia | Creative Studio Session 3 | `generate-storyline` API action (scenes + dual image/motion prompts + timeline + platform fit + no-sound test). UI: mode toggle (Single/Storyline), URL param pre-fill from pitch, scene cards with copy buttons, timeline bar, platform fit chips, editing notes. TypeScript zero errors. | Test in browser: click Studio on a Marketing pitch → Storyline mode pre-fills |
 | 2026-05-16 | Kai, Nate, Kahneman, Raj, Mia | Marketing Suggestion System — Sessions 1+2 | Session 1: migration 020, Big Idea API+UI, Content Series (FAN goals, platformFocus). Session 2: live pitch board (generate→approve→calendar, send-to-studio, dismiss), slug→UUID fix | Fill Big Idea, click Generate |
@@ -38,7 +43,7 @@
 
 ---
 
-## Last Clean Exit: 2026-05-16 04:00
+## Last Clean Exit: 2026-05-19 18:00
 
 ## SIP Flags (Pending Distillation)
 - No pending SIP flags

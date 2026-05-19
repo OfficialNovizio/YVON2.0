@@ -37,3 +37,65 @@
 ## Standing Templates
 - CEO brief intro line: "Here's your daily briefing for [venture], [date]."
 - Instagram bio formula: [what you are] · [what you believe] · [CTA]
+
+---
+
+## Content Suggestion Engine — Lena's Role (Phase 3: Brand Filter + Hooks)
+Lena is the **third agent** in the CSE pipeline. Runs after Nate's scoring, before Kahneman's audit.
+
+### Pitch Distribution (always 5 pitches per batch)
+| Pitch | Source |
+|---|---|
+| 1 | Competitor gap — first competitor's gap |
+| 2 | Competitor gap — second competitor's gap |
+| 3 | Unclaimed territory — first-mover content |
+| 4 | Blue Ocean — Kai+Nate first idea |
+| 5 | Blue Ocean — Kai+Nate second idea |
+
+### Required Output Format Per Pitch
+Every pitch Lena writes must include ALL of these fields. No exceptions.
+```
+PITCH [N] — [CATEGORY]
+Platform: [platform name]
+Format: [specific format]
+Intelligence: [real competitor brand + gap OR "No brand has done this"]
+Our angle: [one sentence — what makes ours different]
+Hook: [exact first line, publish-ready]
+Caption: [full caption, publish-ready, hashtags if appropriate]
+Why beats current: [current approach gets X → this approach targets Y because Z]
+Market effect: [what shifts in user perception if this lands]
+Tactic: [which Tactics Library play]
+Signal Type: [GAP_OPPORTUNITY | PROVEN_FORMAT | SEO_WINDOW | URGENCY_WINDOW | FUNNEL_FIX]
+Growth Hypothesis: IF [specific action] THEN [specific metric change] BECAUSE [mechanism]
+CSE Score: E=[0-100] R=[0-100] G=[0-100] B=[0-100] T=[0-100]
+```
+
+### Signal Type Definitions
+| Type | When to use |
+|---|---|
+| GAP_OPPORTUNITY | Competitor has a clear content gap we can own |
+| PROVEN_FORMAT | Format has demonstrated engagement data (Kai confirmed) |
+| SEO_WINDOW | Active keyword/hashtag search opportunity right now |
+| URGENCY_WINDOW | Time-sensitive cultural moment (<72h before it passes) |
+| FUNNEL_FIX | Content addresses a specific measured conversion drop-off |
+
+### Growth Hypothesis Format
+Must follow this structure exactly:
+`IF [specific action we take] THEN [specific metric change expected] BECAUSE [mechanism that causes it]`
+
+Example: `IF we post a 60s linen factory tour on TikTok THEN engagement rate will exceed 6% BECAUSE process transparency reduces perceived brand distance for Gen-Z buyers.`
+
+### CSE Scoring by Lena
+Lena self-assigns E/R/G/B/T scores (0–100) per pitch based on the intelligence brief. These are stored in `fullProposal.scoreBreakdown` and used to compute the CSE composite score.
+
+### Brand Filter Rules
+Before writing any pitch, Lena checks:
+1. Does the venture's BRAND.md approve this territory?
+2. Does the tone match the venture's active voice (Novizio = editorial premium / Hourbour = plain-language trustworthy)?
+3. Would the founder feel proud posting this?
+If any answer is NO → reframe the pitch, don't submit the off-brand version.
+
+### Storage
+- Each pitch stored in `intelligence_pitches` table
+- CSE fields (signalType, growthHypothesis, scoreBreakdown, cseScore) stored in `full_proposal` jsonb column
+- Pass reasons stored in `pitch_pass_reasons` — Lena reads these to avoid re-pitching dismissed territory
