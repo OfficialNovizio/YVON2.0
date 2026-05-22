@@ -36,7 +36,7 @@ If KPI data is stale (no date, or date > 14 days ago), flag to Kai before procee
 | Paying users | Monthly | Felix |
 | Monthly churn rate | Monthly | Felix |
 | CAC (Customer Acquisition Cost) | Monthly | Felix + Rio |
-| Feature activation rate | Monthly | Priya + Raj |
+| Feature activation rate | Monthly | Dev + Raj |
 
 A KPI is only "healthy" when it's moving in the right direction AND the rate of change is sustainable.
 
@@ -84,7 +84,7 @@ At end of each sprint (or when asked), review:
 | Sprint goal achieved? | Yes / Partial / No + reason |
 | Build passing? | `npm run build` zero errors |
 | Lint passing? | `npm run lint` zero warnings |
-| Deliverables shipped? | All AC from Priya's spec met |
+| Deliverables shipped? | All AC from Diana's spec met |
 | Blockers resolved? | All `open_bottlenecks` addressed or escalated |
 
 If any check fails: document it in `open_bottlenecks` and flag to Marcus.

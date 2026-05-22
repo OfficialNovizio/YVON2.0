@@ -23,7 +23,7 @@
 | principles.md | Before analysis |
 | skill.md | Before execution |
 | memory.md | Session end protocol |
-| known-issues.md | Before decisions |
+| conflicts.md | Before decisions |
 
 ## Core Philosophy
 > "The one thing I don't know here is what System 2 would say."

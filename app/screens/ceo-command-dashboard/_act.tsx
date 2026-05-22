@@ -165,7 +165,7 @@ function Priorities() {
 // ── Act Tab ────────────────────────────────────────────────────────────────────
 export default function ActTab({ onWarRoom }: { onWarRoom: () => void }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '5fr 7fr', gap: 18 }}>
+    <div className="ceo-act-grid">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
         <DecisionQueue onWarRoom={onWarRoom} />
       </div>

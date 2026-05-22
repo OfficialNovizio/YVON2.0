@@ -39,7 +39,7 @@ function Ticker() {
     >
       {/* Live badge */}
       <div
-        className="flex-none flex items-center gap-2.5 px-5"
+        className="ceo-ticker-side flex-none flex items-center gap-2.5 px-5"
         style={{ height: '100%', borderRight: '1px solid rgba(255,255,255,0.12)', fontSize: 12, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: P_INK2 }}
       >
         <span className="ceo-live-dot" />
@@ -68,7 +68,7 @@ function Ticker() {
 
       {/* Right label */}
       <div
-        className="flex-none flex items-center gap-3 px-5"
+        className="ceo-ticker-side flex-none flex items-center gap-3 px-5"
         style={{ height: '100%', borderLeft: '1px solid rgba(255,255,255,0.12)', fontSize: 12, fontWeight: 800, letterSpacing: '0.16em', color: P_INK4, textTransform: 'uppercase' }}
       >
         <span className="text-[11px] px-3 py-1 rounded-full font-bold" style={{ background: 'rgba(255,255,255,0.14)', color: 'rgba(240,244,255,0.92)', letterSpacing: '0.12em' }}>13 sources</span>
@@ -81,19 +81,19 @@ function Ticker() {
 function PageHead() {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   return (
-    <div className="flex justify-between items-end gap-6 mt-[18px]">
+    <div className="ceo-page-head">
       <div>
         <div className="flex items-center gap-2 mb-2" style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.20em', textTransform: 'uppercase', color: INK_4 }}>
           <span className="w-2 h-2 rounded-full" style={{ background: '#6c5ce7' }} />
           CEO Command · YVON OS
         </div>
-        <h1 style={{ fontSize: 52, fontWeight: 800, letterSpacing: '-0.03em', margin: 0, color: INK, lineHeight: 1 }}>
+        <h1 className="ceo-page-title">
           Command Center<span style={{ color: ACCENT }}>.</span>
         </h1>
       </div>
-      <div className="text-right flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <p style={{ fontSize: 15, fontWeight: 600, color: 'rgba(10,37,71,0.75)' }}>{today}</p>
-        <p className="flex items-center justify-end gap-1.5" style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: GREEN }}>
+        <p className="flex items-center gap-1.5" style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: GREEN }}>
           <span className="ceo-live-dot" style={{ background: GREEN }} />
           Next refresh 06:00 AM
         </p>
@@ -112,16 +112,7 @@ const TABS: { id: TabId; label: string; badge?: boolean }[] = [
 
 function TabStrip({ active, onChange, actCount }: { active: TabId; onChange: (t: TabId) => void; actCount: number }) {
   return (
-    <nav
-      className="flex items-center gap-1.5 mt-[22px] p-1.5 w-fit"
-      style={{
-        background: 'rgba(8,16,36,0.58)',
-        backdropFilter: 'blur(28px) saturate(160%)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        borderRadius: 999,
-        boxShadow: '0 1px 0 rgba(255,255,255,0.10) inset, 0 20px 40px -18px rgba(0,0,0,0.50), 0 4px 10px -4px rgba(0,0,0,0.30)',
-      }}
-    >
+    <nav className="ceo-tab-strip">
       {TABS.map(t => (
         <button
           key={t.id}

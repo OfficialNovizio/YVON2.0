@@ -526,6 +526,17 @@ export default function ContentTab() {
   const [measuredCount,  setMeasuredCount]  = useState(0);
   const [stageLabel,     setStageLabel]     = useState('');
 
+  // CSE closed loop — perf record write-back + Measure Now
+  interface PerfRecord { id: string; platform: string; format: string; signal_type: string | null; posted_at: string; pitch_id: string | null; calendar_entry_id: string | null }
+  const [pendingPerformanceId, setPendingPerformanceId] = useState<string | null>(null);
+  const [measurePending,       setMeasurePending]       = useState<PerfRecord[]>([]);
+  const [showMeasureModal,     setShowMeasureModal]     = useState(false);
+  const [measureTarget,        setMeasureTarget]        = useState<PerfRecord | null>(null);
+  interface MeasureForm { views: string; likes: string; comments: string; shares: string; saves: string; reach: string }
+  const [measureForm,          setMeasureForm]          = useState<MeasureForm>({ views: '', likes: '', comments: '', shares: '', saves: '', reach: '' });
+  const [measureSaving,        setMeasureSaving]        = useState(false);
+  const [measureDone,          setMeasureDone]          = useState<string | null>(null);
+
   const fetchEntries = useCallback(async () => {
     setCalLoading(true);
     try {
@@ -554,10 +565,11 @@ export default function ContentTab() {
 
     fetch('/api/content-performance')
       .then(r => r.json())
-      .then((d: { stage?: number; measuredCount?: number; stageLabel?: string }) => {
+      .then((d: { stage?: number; measuredCount?: number; stageLabel?: string; pending?: PerfRecord[] }) => {
         setContentStage((d.stage ?? 0) as 0|1|2);
         setMeasuredCount(d.measuredCount ?? 0);
         setStageLabel(d.stageLabel ?? '');
+        setMeasurePending(d.pending ?? []);
       })
       .catch(() => null);
   }, []);
@@ -590,6 +602,26 @@ export default function ContentTab() {
   async function approvePitch(pitch: ContentPitch) {
     await fetch('/api/content-intelligence', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pitchId: pitch.id, status: 'approved' }) });
     setPitches(prev => prev.map(p => p.id === pitch.id ? { ...p, status: 'approved' } : p));
+
+    // Gap 1 — create content_performance record linked to this pitch
+    const fp = pitch.fullProposal as Record<string, unknown> | null;
+    fetch('/api/content-performance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pitchId:            pitch.id,
+        platform:           pitch.platform,
+        format:             pitch.format,
+        signalType:         fp?.signalType ?? null,
+        cseScore:           fp?.cseScore ?? null,
+        scoreBreakdown:     fp?.scoreBreakdown ?? null,
+        growthHypothesis:   fp?.growthHypothesis ?? null,
+      }),
+    })
+      .then(r => r.json())
+      .then((d: { record?: { id: string } }) => { if (d.record?.id) setPendingPerformanceId(d.record.id); })
+      .catch(() => null);
+
     openAdd({ headline: pitch.hookA, platform: pitch.platform.toUpperCase().slice(0, 2) as CalendarPlatform, contentType: pitch.format as CalendarContentType, planDate: isoDate(addDays(new Date(), 3)), brief: pitch.ourMove, status: 'planned' });
   }
 
@@ -610,6 +642,32 @@ export default function ContentTab() {
       setPitches(prev => prev.map(p => p.id === passModalPitch.id ? { ...p, status: 'passed' } : p));
       setPassModalPitch(null); setPassReason(''); setPassNotes('');
     } finally { setPassLoading(false); }
+  }
+
+  async function handleMeasureSubmit() {
+    if (!measureTarget) return;
+    setMeasureSaving(true);
+    try {
+      const n = (s: string) => s.trim() ? Number(s) : undefined;
+      const res = await fetch('/api/content-performance', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recordId:       measureTarget.id,
+          actualViews:    n(measureForm.views),
+          actualLikes:    n(measureForm.likes),
+          actualComments: n(measureForm.comments),
+          actualShares:   n(measureForm.shares),
+          actualSaves:    n(measureForm.saves),
+          actualReach:    n(measureForm.reach),
+        }),
+      });
+      const d = await res.json() as { outcome?: string };
+      setMeasureDone(d.outcome ?? 'met');
+      setMeasurePending(prev => prev.filter(p => p.id !== measureTarget.id));
+      setMeasuredCount(c => c + 1);
+      setTimeout(() => { setShowMeasureModal(false); setMeasureTarget(null); setMeasureDone(null); setMeasureForm({ views: '', likes: '', comments: '', shares: '', saves: '', reach: '' }); }, 2200);
+    } finally { setMeasureSaving(false); }
   }
 
   async function handleWeightAction(proposalId: string, action: 'approve' | 'reject') {
@@ -638,7 +696,18 @@ export default function ContentTab() {
       if (modalMode === 'add') {
         const res = await fetch('/api/content-calendar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ planDate: form.planDate, contentType: form.contentType, platform: form.platform, headline: form.headline, brief: form.brief || undefined, status: form.status, asset_url: form.assetUrl || undefined }) });
         const data = await res.json() as { entry?: ContentCalendarEntry };
-        if (data.entry) setEntries(prev => [...prev, data.entry!]);
+        if (data.entry) {
+          setEntries(prev => [...prev, data.entry!]);
+          // Gap 2 — write calendar_entry_id back to perf record
+          if (pendingPerformanceId && data.entry.id) {
+            fetch('/api/content-performance', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'link_calendar', recordId: pendingPerformanceId, calendarEntryId: data.entry.id }),
+            }).catch(() => null);
+            setPendingPerformanceId(null);
+          }
+        }
       } else if (editingId) {
         await fetch('/api/content-calendar', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_status', id: editingId, status: form.status, headline: form.headline, brief: form.brief, plan_date: form.planDate, content_type: form.contentType, platform: form.platform, asset_url: form.assetUrl || null }) });
         setEntries(prev => prev.map(e => e.id === editingId ? { ...e, headline: form.headline, brief: form.brief, status: form.status as CalendarStatus, planDate: form.planDate, contentType: form.contentType, platform: form.platform as CalendarPlatform, assetUrl: form.assetUrl || undefined } : e));
@@ -819,12 +888,77 @@ export default function ContentTab() {
                   : `${5 - measuredCount} more measured posts unlock own-data scoring.`)}
               </p>
             </div>
-            <button
-              onClick={() => router.push('/screens/analytics/social-media')}
-              style={{ fontSize: 11, color: ACCENT, whiteSpace: 'nowrap', fontFamily: 'InstrumentSans, Inter, sans-serif' }}
-              className="hover:opacity-80 transition-opacity shrink-0">
-              Track posts →
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {measurePending.length > 0 && (
+                <button
+                  onClick={() => { setMeasureTarget(measurePending[0]); setMeasureForm({ views: '', likes: '', comments: '', shares: '', saves: '', reach: '' }); setMeasureDone(null); setShowMeasureModal(true); }}
+                  style={{ fontSize: 11, background: '#0066cc', color: '#fff', borderRadius: 20, padding: '4px 10px', fontFamily: 'InstrumentSans, Inter, sans-serif', fontWeight: 600, whiteSpace: 'nowrap' }}
+                  className="hover:opacity-80 transition-opacity flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[12px]">analytics</span>
+                  Measure {measurePending.length} post{measurePending.length > 1 ? 's' : ''}
+                </button>
+              )}
+              <button
+                onClick={() => router.push('/screens/analytics/social-media')}
+                style={{ fontSize: 11, color: ACCENT, whiteSpace: 'nowrap', fontFamily: 'InstrumentSans, Inter, sans-serif' }}
+                className="hover:opacity-80 transition-opacity">
+                Track posts →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Measure Now modal */}
+        {showMeasureModal && measureTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)' }}>
+            <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg,rgba(15,22,38,0.97),rgba(8,14,28,0.99))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 32px 80px -12px rgba(0,10,40,0.70)' }}>
+              <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: 0, fontFamily: 'InstrumentSans, Inter, sans-serif' }}>Measure Post</p>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.40)', margin: 0 }}>{measureTarget.platform} · {measureTarget.format} · {new Date(measureTarget.posted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                </div>
+                <button onClick={() => setShowMeasureModal(false)} className="text-white/40 hover:text-white transition-colors">
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+              {measureDone ? (
+                <div className="px-5 pb-6 flex flex-col items-center gap-3 pt-4">
+                  <span className="material-symbols-outlined text-[44px]" style={{ color: measureDone === 'overperformed' ? '#34d399' : measureDone === 'underperformed' ? '#f87171' : '#60a5fa' }}>
+                    {measureDone === 'overperformed' ? 'trending_up' : measureDone === 'underperformed' ? 'trending_down' : 'trending_flat'}
+                  </span>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: measureDone === 'overperformed' ? '#34d399' : measureDone === 'underperformed' ? '#f87171' : '#60a5fa', margin: 0, textTransform: 'capitalize' }}>{measureDone}</p>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.40)', margin: 0 }}>CSE is learning from this result</p>
+                </div>
+              ) : (
+                <div className="px-5 pb-5 space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    {([['views','Views'],['likes','Likes'],['comments','Comments'],['shares','Shares'],['saves','Saves'],['reach','Reach']] as const).map(([key, label]) => (
+                      <div key={key} className="space-y-1">
+                        <label style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.30)', textTransform: 'uppercase', letterSpacing: '0.12em', fontFamily: 'InstrumentSans, Inter, sans-serif' }}>{label}</label>
+                        <input
+                          type="number" inputMode="numeric" min={0}
+                          value={measureForm[key]}
+                          onChange={e => setMeasureForm(f => ({ ...f, [key]: e.target.value }))}
+                          placeholder="0"
+                          className="w-full rounded-xl px-3 py-2 text-[13px] text-white placeholder:text-white/15 outline-none"
+                          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'InstrumentSans, Inter, sans-serif' }} />
+                      </div>
+                    ))}
+                  </div>
+                  {measurePending.length > 1 && (
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.28)', margin: 0 }}>{measurePending.length - 1} more post{measurePending.length - 1 > 1 ? 's' : ''} awaiting measurement</p>
+                  )}
+                  <button
+                    onClick={handleMeasureSubmit}
+                    disabled={measureSaving || !Object.values(measureForm).some(v => v.trim())}
+                    className="w-full py-2.5 rounded-full text-[13px] font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-40"
+                    style={{ background: '#0066cc', color: '#fff', fontFamily: 'InstrumentSans, Inter, sans-serif' }}>
+                    {measureSaving && <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>}
+                    {measureSaving ? 'Saving…' : 'Submit metrics'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

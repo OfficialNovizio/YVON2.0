@@ -17,6 +17,7 @@ All Next.js Route Handlers live here. These run **server-side only** — they ar
 | `analytics/` | GET | Google Analytics Data API | `GOOGLE_SA_JSON`, `GA4_PROPERTY_ID` |
 | `scrape/` | POST | Apify Web Scraper | `APIFY_TOKEN` |
 | `trending/` | GET | Apify + Anthropic (cron) | `APIFY_TOKEN`, `ANTHROPIC_API_KEY`, `CRON_SECRET` |
+| `session-sync/` | GET, POST | Supabase `agent_sessions` + GitHub Contents API | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GITHUB_TOKEN`, `YVON_GITHUB_OWNER`, `YVON_GITHUB_REPO` |
 
 ## Shared conventions for every route
 

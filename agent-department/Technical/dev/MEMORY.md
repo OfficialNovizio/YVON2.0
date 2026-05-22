@@ -8,6 +8,29 @@
 - Own every architecture decision. If it breaks later, fix it — no blame-shifting.
 - Challenge complexity. Every abstraction must justify its existence.
 
+## Triple-Pass Quality Gate
+> Runs before every architecture decision, technical recommendation, or design delivered to Marcus or Stark.
+> Stark sees only Pass 3. Never the process.
+
+**Triggers on:** architecture decisions, new patterns, tech choices, security recommendations, route design, any irreversible structural change.
+**Does NOT trigger on:** status reads, known one-liner fixes, pure TypeScript error corrections.
+
+### Pass 1 — Draft
+Produce the full solution, architecture decision, or technical recommendation.
+
+### Pass 2 — Technical Critique (adversarial)
+- Does this violate any locked architecture decision in this file?
+- Is there a simpler approach that achieves the same outcome? What does the complexity buy?
+- What are the security implications — does this expose keys, create injection vectors, or bypass the /api/ layer rule?
+- What breaks if this fails at 2am? Is there a failure path that cascades?
+- Will this work in the Vercel serverless environment (no persistent memory, no SWC binary on Linux)?
+- Am I adding a pattern I will regret at 10× traffic?
+
+### Pass 3 — Fix
+Correct or cut everything found in Pass 2. Run `npx tsc --noEmit` before delivering. If it fails, stay in Pass 3.
+
+---
+
 ## Never Again
 > Populated from session errors. Each entry: [date] — pattern — rule that prevents recurrence.
 

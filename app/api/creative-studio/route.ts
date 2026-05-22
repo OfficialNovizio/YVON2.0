@@ -16,6 +16,7 @@ interface BriefData {
   audience: string
   tone: string
   platform: string
+  contentType: string   // e.g. Reel | Post | Carousel | Story | Video | Short …
 }
 
 interface PromptShape {
@@ -80,6 +81,7 @@ Campaign Brief:
 - Audience: ${brief.audience}
 - Tone: ${brief.tone}
 - Platform: ${brief.platform}
+- Format: ${brief.contentType || 'Post'}
 
 Generate 3 distinct visual mood board directions for this campaign. Each is a complete visual world.
 
@@ -118,8 +120,20 @@ Campaign: ${brief.campaignName}
 Objective: ${brief.objective}
 Audience: ${brief.audience}
 Tone: ${brief.tone}
-Platform: ${brief.platform}
+Platform: ${brief.platform} | Format: ${brief.contentType || 'Post'}
 Visual direction: ${body.selectedMood ?? 'Premium, cinematic'}
+
+Format rules: ${
+  brief.contentType === 'Reel' || brief.contentType === 'Video' || brief.contentType === 'Short'
+    ? 'Write a hook-first script for vertical video. Hook in first 2 seconds. Voiceover or on-screen text. Under 90 words.'
+    : brief.contentType === 'Carousel'
+    ? 'Write a slide-by-slide script. Slide 1 = hook, slides 2–7 = value, slide 8 = CTA. Each slide max 15 words.'
+    : brief.contentType === 'Story'
+    ? 'Write a 3-frame story sequence. Frame 1 = pattern interrupt, Frame 2 = reveal, Frame 3 = CTA with sticker/swipe-up intent.'
+    : brief.contentType === 'Article' || brief.contentType === 'Document'
+    ? 'Write a LinkedIn-native opening hook + 3 key points + closing CTA. Professional tone, no hashtags in script.'
+    : 'Write platform-native copy optimised for the feed.'
+}
 
 STEP 0B — SYSTEM 1 / SYSTEM 2 ROUTER:
 Determine the primary system target. ${brief.platform} discovery content is almost always System 1.
@@ -157,7 +171,7 @@ Return ONLY valid JSON with no markdown:
         const prompt = `You are Lena (Brand Copywriter) running the Kahneman Consumer Psychology LEAN Protocol.
 
 Campaign: ${brief.campaignName}
-Platform: ${brief.platform}
+Platform: ${brief.platform} | Format: ${brief.contentType || 'Post'}
 Audience: ${brief.audience}
 Tone: ${brief.tone}
 Script context: ${body.script ?? 'Not provided'}
@@ -205,8 +219,19 @@ Campaign: ${brief.campaignName}
 Objective: ${brief.objective}
 Audience: ${brief.audience}
 Tone: ${brief.tone}
+Platform: ${brief.platform} | Format: ${brief.contentType || 'Post'}
 Visual direction: ${body.selectedMood ?? 'Premium, cinematic'}
 Script: ${body.script ?? 'Not provided'}
+
+Composition constraint: ${
+  brief.contentType === 'Reel' || brief.contentType === 'Video' || brief.contentType === 'Short' || brief.contentType === 'Story'
+    ? 'VERTICAL 9:16 frame. Subject centred vertically. Key visual in top third. Leave bottom third for caption overlay. No horizontal compositions.'
+    : brief.contentType === 'Carousel'
+    ? '4:5 portrait frame. Each prompt = one carousel slide. Must read as standalone AND as part of a sequence.'
+    : brief.contentType === 'Article' || brief.contentType === 'Thumbnail'
+    ? 'HORIZONTAL 16:9 frame. Cinematic widescreen composition. Rule-of-thirds subject placement.'
+    : 'SQUARE 1:1 frame. Centred or rule-of-thirds. Strong focal point that reads at thumbnail scale.'
+}
 
 PSYCHOLOGY INTEGRATION (non-negotiable):
 
@@ -423,6 +448,65 @@ Return ONLY valid JSON with no markdown:
         const raw = await callSynthesis({ messages: [{ role: 'user', content: prompt }], maxTokens: 3000 })
         const data = JSON.parse(extractJson(raw)) as Record<string, unknown>
         return Response.json({ ...data, catalogue: items })
+      }
+
+      // ── SHOOT MODE: Real-product phone shoot brief (Atlas + Pixel) ────────
+      case 'generate-shot-list': {
+        if (!brief) return Response.json({ error: 'Missing brief' }, { status: 400 })
+
+        const compositionRule =
+          brief.contentType === 'Reel' || brief.contentType === 'Video' || brief.contentType === 'Short' || brief.contentType === 'Story'
+            ? 'VERTICAL 9:16 — hold phone portrait. Subject in upper two-thirds. Leave room at bottom for caption overlay.'
+            : brief.contentType === 'Carousel'
+            ? '4:5 portrait — hold phone portrait. Each shot = one carousel slide. Keep background consistent across all 5 shots.'
+            : brief.contentType === 'Article' || brief.contentType === 'Thumbnail'
+            ? 'HORIZONTAL 16:9 — hold phone landscape. Rule-of-thirds subject placement. Strong focal element left or right.'
+            : 'SQUARE 1:1 — hold phone portrait then crop square in-app. Strong centred focal point that reads at thumbnail scale.'
+
+        const prompt = `You are Atlas (Art Director) + Pixel (Production Pipeline) at YVON creating a phone-shoot brief for ${ventureId}.
+
+Campaign:
+- Name: ${brief.campaignName}
+- Objective: ${brief.objective}
+- Audience: ${brief.audience}
+- Tone: ${brief.tone}
+- Platform: ${brief.platform} | Format: ${brief.contentType || 'Post'}
+- Visual direction: ${body.selectedMood ?? 'Premium, cinematic'}
+
+Generate a 5-shot brief for PHONE PHOTOGRAPHY — no studio gear, no professional equipment.
+This is designed for a founder or team member shooting alone or with one helper.
+
+Composition: ${compositionRule}
+
+Each shot must give actionable, specific direction:
+- FRAMING: exact angle, distance, what fills the frame, what is cut off intentionally
+- LIGHTING: which window to face, what time of day, whether to diffuse with a thin curtain, avoid direct harsh sun
+- DIRECTION: exact body/product position, whether subject moves, gaze direction, what to do with hands
+- PACING: for video — how long the shot runs, camera movement (static / slow pan / handheld drift). For photo — single tap-to-focus or burst mode.
+- TIP: one specific phone photography trick for this exact shot (e.g. "tap and hold to lock focus then slide down to reduce exposure")
+
+Return ONLY valid JSON with no markdown:
+{
+  "briefTitle": "evocative 2-3 word shoot concept",
+  "postingNote": "one sentence on best time + context to post this on ${brief.platform}",
+  "captionDraft": "a ready-to-post caption for this shoot — conversational, brand-native, with hashtags at the end",
+  "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5", "#tag6"],
+  "shots": [
+    {
+      "shotNumber": 1,
+      "title": "2-3 word shot name",
+      "framing": "exact framing instruction — what is centred, what angle, how far away, portrait or landscape hold",
+      "lighting": "precise natural light instruction — window position, time of day, direct vs diffused, what to avoid",
+      "direction": "exact subject direction — body position, movement, gaze, expression, hands, energy level",
+      "durationOrPacing": "video: duration in seconds + camera movement. photo: burst or single, any specific timing.",
+      "tip": "one tactical phone photography tip specific to this exact shot"
+    }
+  ]
+}`
+
+        const raw = await callSynthesis({ messages: [{ role: 'user', content: prompt }], maxTokens: 3000 })
+        const data = JSON.parse(extractJson(raw)) as Record<string, unknown>
+        return Response.json(data)
       }
 
       default:

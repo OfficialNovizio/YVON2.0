@@ -3,18 +3,19 @@
 > Always load this first. Load MEMORY.md for Supabase rules, schema decisions, route handler patterns, and integration notes.
 
 ## Current Status
-- **Last active:** 2026-03-23
+- **Last active:** 2026-05-21
 - **Current task:** idle
-- **Waiting for Stark:** none
-- **Next session starts with:** Check storage.ts for stale data keys (flagged by Dev as tech debt)
+- **Waiting for Stark:** Run migrations 023, 022, 021 in Supabase SQL Editor
+- **Next session starts with:** Confirm migrations are live before wiring any API route that depends on them
 
 ## Last 3 Sessions
 | Date | Task | Outcome | Next Step |
 |------|------|---------|-----------|
-| 2026-03-23 | Enforce War Room 2-specialist cap | .slice(0,2) in both routing paths of /api/team-chat; specialist max_tokens 512→250 | Stable |
-| 2026-03-23 | Add prompt caching to /api/claude | Wrapped systemPrompt in cache_control ephemeral; max_tokens 4096→2048 | Stable |
-| 2026-03-23 | Fix Nate model in briefing/route.ts | Sonnet→Haiku; max_tokens 512→300 | Stable |
+| 2026-05-21 | Studio History API | Migration 023 (studio_sessions table). GET /api/studio-sessions (filtered by venture+mode). POST /api/studio-sessions (auto-save via hasSavedRef). DEMO_SESSIONS (6 items, 2 per mode) served when DB empty. Zero TS errors. | Run migration 023 |
+| 2026-05-20 | Creative Studio Overhaul API | ASPECT_TO_PX map (Krea width/height). generate-shot-list route (5 shots: framing/lighting/direction/pacing/tip + captionDraft + hashtags). Zero TS errors. | Test Krea dimension passthrough end-to-end |
+| 2026-05-20 | CSE Closed Loop — 5 gaps | approvePitch() fires POST /api/content-performance (Gap 1). handleSave() writes calendar_entry_id via PATCH (Gap 2). Measure PATCH → outcome computed server-side (Gap 3). Fixed 2 pre-existing TS errors (.catch on Supabase builders). Zero TS errors. | Run migration 022, test approve→measure loop |
 
 ## Open Items
 > Unresolved questions, blockers, or decisions pending Stark input.
 - /scripts/seed-agents.ts — safe to delete if agents table already seeded (confirm with Stark)
+- CSE Phase 2: Apify Instagram scraper integration — awaiting migration 022 live confirmation

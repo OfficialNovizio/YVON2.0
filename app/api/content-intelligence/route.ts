@@ -560,14 +560,16 @@ export async function PATCH(request: Request): Promise<Response> {
     const isRequeue     = body.passReason === 'wrong_timing'
     const isSignalPenalty = body.passReason === 'tried_failed'
 
-    await supabase.from('pitch_pass_reasons').insert({
-      venture_slug:  slug,
-      pitch_id:      body.pitchId,
-      reason:        body.passReason,
-      notes:         body.passNotes ?? null,
-      requeue_at:    isRequeue ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() : null,
-      signal_penalty: isSignalPenalty,
-    }).catch(() => null)  // non-fatal
+    try {
+      await supabase.from('pitch_pass_reasons').insert({
+        venture_slug:  slug,
+        pitch_id:      body.pitchId,
+        reason:        body.passReason,
+        notes:         body.passNotes ?? null,
+        requeue_at:    isRequeue ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() : null,
+        signal_penalty: isSignalPenalty,
+      })
+    } catch { /* non-fatal */ }
   }
 
   return Response.json({ ok: true, pitchId: body.pitchId, status: body.status })

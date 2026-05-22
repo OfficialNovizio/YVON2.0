@@ -264,6 +264,91 @@ function WorkloadCalendarPanel() {
   );
 }
 
+// ── Session Sync Panel ─────────────────────────────────────────────────────────
+interface SessionSyncData {
+  sessionCount: number
+  agents: string[]
+  tasks: string[]
+  markdownRow: string | null
+}
+
+function SessionSyncPanel() {
+  const [data, setData]     = useState<SessionSyncData | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/session-sync')
+      .then(r => r.json())
+      .then((d: SessionSyncData) => setData(d))
+      .catch(() => {})
+  }, [])
+
+  async function handleSync() {
+    setSyncing(true)
+    setSyncResult(null)
+    try {
+      const res = await fetch('/api/session-sync', { method: 'POST' })
+      const json = await res.json() as { synced?: boolean; skipped?: boolean; reason?: string; error?: string; sessionCount?: number }
+      if (json.error)   setSyncResult(`Error: ${json.error}`)
+      else if (json.skipped) setSyncResult(json.reason ?? 'Nothing to sync')
+      else setSyncResult(`Synced ${json.sessionCount ?? 0} sessions to SESSION.md`)
+    } catch {
+      setSyncResult('Request failed')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  return (
+    <SysPanel title="Session Log Sync" right="Live agents → SESSION.md">
+      {!data ? (
+        <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 18, height: 18, border: `2px solid ${L1}`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: I1d }}>Today&apos;s Calls</div>
+              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', color: data.sessionCount > 0 ? ACCENT : I1d }}>{data.sessionCount}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: I1d }}>Agents Active</div>
+              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', color: data.agents.length > 0 ? GREEN : I1d }}>{data.agents.length}</div>
+            </div>
+          </div>
+          {data.agents.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+              {data.agents.slice(0, 6).map(a => (
+                <Chip key={a} label={a} value="" />
+              ))}
+            </div>
+          )}
+          <button
+            onClick={handleSync}
+            disabled={syncing || data.sessionCount === 0}
+            style={{
+              width: '100%', padding: '9px 0', borderRadius: 10, border: 'none', cursor: syncing || data.sessionCount === 0 ? 'not-allowed' : 'pointer',
+              background: syncing || data.sessionCount === 0 ? 'rgba(12,44,82,0.12)' : `linear-gradient(135deg, ${ACCENT}, ${VIOLET})`,
+              color: syncing || data.sessionCount === 0 ? I1d : '#fff',
+              fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
+              transition: 'opacity 150ms ease', opacity: syncing ? 0.7 : 1,
+            }}
+          >
+            {syncing ? 'Syncing…' : 'Sync to SESSION.md'}
+          </button>
+          {syncResult && (
+            <p style={{ margin: '8px 0 0', fontSize: 11, color: syncResult.startsWith('Error') ? '#dc2626' : GREEN, fontWeight: 600 }}>
+              {syncResult}
+            </p>
+          )}
+        </>
+      )}
+    </SysPanel>
+  )
+}
+
 // ── System Strip — outer V4, inner V1 ─────────────────────────────────────────
 export default function SystemStrip() {
   const [open, setOpen] = useState(false);
@@ -282,17 +367,18 @@ export default function SystemStrip() {
           System
         </span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12, fontSize: 13, fontWeight: 600, color: I4c }}>
-          <span>Project Graph · Token Usage · Workload Calendar</span>
+          <span>Project Graph · Token Usage · Workload · Session Sync</span>
           <span style={{ display: 'inline-flex', alignItems: 'center', transition: 'transform 240ms ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
         </span>
       </div>
 
       {/* Expandable content */}
-      <div style={{ maxHeight: open ? 520 : 0, overflow: 'hidden', transition: 'max-height 320ms ease', padding: open ? '0 14px 14px' : '0 14px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+      <div style={{ maxHeight: open ? 640 : 0, overflow: 'hidden', transition: 'max-height 320ms ease', padding: open ? '0 14px 14px' : '0 14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 14 }}>
           <ProjectGraphPanel />
           <TokenUsagePanel />
           <WorkloadCalendarPanel />
+          <SessionSyncPanel />
         </div>
       </div>
 

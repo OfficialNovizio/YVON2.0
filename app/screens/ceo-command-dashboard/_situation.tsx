@@ -265,10 +265,10 @@ function KeyNumbers() {
 // ── Situation Tab ──────────────────────────────────────────────────────────────
 export default function SituationTab() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>
-      <div style={{ gridColumn: '1 / span 12' }}><AgentKanban /></div>
-      <div style={{ gridColumn: '1 / span 7' }}><IntelligenceFeedPanel /></div>
-      <div style={{ gridColumn: '8 / span 5' }}><KeyNumbers /></div>
+    <div className="ceo-situation-grid">
+      <div className="sit-full"><AgentKanban /></div>
+      <div className="sit-feed"><IntelligenceFeedPanel /></div>
+      <div className="sit-numbers"><KeyNumbers /></div>
     </div>
   );
 }

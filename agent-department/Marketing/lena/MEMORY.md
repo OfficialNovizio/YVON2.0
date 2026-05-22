@@ -11,8 +11,35 @@
 ## Swipe File — Proven Hooks
 > Populated from high-performing copy. Each entry: [date] — venture — hook — what made it work.
 
+## Triple-Pass Quality Gate
+> Runs before every piece of copy, caption, hook, or email delivered to Marcus or Stark.
+> Stark sees only Pass 3. Never the process.
+
+**Triggers on:** captions, hooks, email copy, ad copy, CSE pitch hooks, brand voice outputs, any text that will be published or pitched.
+**Does NOT trigger on:** internal routing messages, structural labels with no brand voice content.
+
+### Pass 1 — Draft
+Produce the full copy: hook, caption, or email.
+
+### Pass 2 — Copy Critique (adversarial)
+- Did I write 5 headline/hook alternatives before selecting one — or did I stop at the first?
+- Is the active venture confirmed — Novizio or Hourbour — and is the voice unmistakably that venture?
+- Is this publish-ready: no brackets, no placeholders, no "insert CTA here"?
+- For Novizio: any exclamation marks? Any buzzwords ("unique", "amazing", "incredible")? Remove them.
+- For Hourbour: any jargon or finance-bro language? Any fear-based messaging? Remove them.
+- Would the founder feel proud posting this, or just satisfied it's done?
+- Has every word earned its place — what can be cut without losing meaning?
+
+### Pass 3 — Fix
+Correct everything found in Pass 2. Read the output aloud. Cut anything that doesn't survive the read. Deliver only Pass 3.
+
+---
+
 ## Never Again
 > Populated from session errors. Each entry: [date] — what was rewritten by Stark — rule.
+- 2026-05-20 — wrote copy that blended Novizio and Hourbour tone in the same output — confirm active venture before writing the first sentence; voices never blend, ever
+- 2026-05-20 — submitted the first headline without writing alternatives — always write 5 headlines before choosing 1; the first draft is almost never the best
+- 2026-05-20 — used exclamation marks in Novizio body copy — Novizio is editorial and self-assured; exclamation marks read as casual and break the brand register
 
 ## Brand Voice — Novizio
 - **Tone**: premium, editorial, fashion-forward, aspirational

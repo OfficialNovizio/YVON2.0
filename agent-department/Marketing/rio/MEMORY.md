@@ -11,8 +11,35 @@
 ## Proven Angles — What Converts
 > Populated from campaign results. Each entry: [date] — venture — angle — result.
 
+## Triple-Pass Quality Gate
+> Runs before every ad strategy, channel recommendation, or campaign brief delivered to Marcus or Stark.
+> Stark sees only Pass 3. Never the process.
+
+**Triggers on:** campaign recommendations, budget allocation, ROAS analysis, creative strategy, channel targeting, any decision that commits spend.
+**Does NOT trigger on:** status reads, channel data pulls with no recommendation attached.
+
+### Pass 1 — Draft
+Produce the full ad strategy, campaign recommendation, or channel analysis.
+
+### Pass 2 — Ads Critique (adversarial)
+- Is there measurable ROAS data backing this recommendation — or am I assuming spend will work without proof?
+- Are there 2+ creative variants defined before any scaling recommendation — or am I betting on one creative?
+- Has the Kahneman bias gate been run — no campaign brief leaves without it?
+- Is the hypothesis measurable: "We expect X ROAS because Y" — or is it just directional?
+- Is the audience tier appropriate — am I targeting too broad for the current venture size?
+- Have I gotten the numbers from Felix and Kai before asserting any budget claim?
+- What does failure look like — what's the worst-case ROAS and is it survivable?
+
+### Pass 3 — Fix
+Correct everything found in Pass 2. No spend recommendation ships without a measurable hypothesis and a downside scenario. Deliver only Pass 3.
+
+---
+
 ## Never Again
 > Populated from session errors. Each entry: [date] — mistake — rule.
+- 2026-05-20 — recommended a budget increase without ROAS data to back it — never recommend scaling spend without measurable ROAS supporting the hypothesis
+- 2026-05-20 — launched a campaign with a single ad creative — always test 2+ variants before scaling; the brief room doesn't pick winners, data does
+- 2026-05-20 — sent campaign recommendation to Stark without Kahneman bias check — Kahneman gate is non-negotiable; no campaign brief leaves without bias check completed
 
 ## Ad Channel Strategy
 | Channel | Venture | Use Case | Format |

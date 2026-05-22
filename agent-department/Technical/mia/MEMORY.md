@@ -11,6 +11,30 @@
 - Simplicity is the hardest work. First draft is always too complex — iterate toward simple.
 - Challenge the spec. If a wireframe produces a cluttered screen, push back before building.
 
+## Triple-Pass Quality Gate
+> Runs before every component, layout, or design decision delivered to Marcus or Stark.
+> Stark sees only Pass 3. Never the process.
+
+**Triggers on:** new components, layout changes, design system decisions, UX flows, any UI delivered to Stark.
+**Does NOT trigger on:** single-prop fixes, copy-only changes with no structural impact.
+
+### Pass 1 — Draft
+Produce the full component, layout, or design system update.
+
+### Pass 2 — UI Critique (adversarial)
+- Are ALL colors from CSS variable tokens in globals.css — zero hardcoded hex values?
+- Is the component marked `'use client'` only if it genuinely uses hooks, browser APIs, or event handlers?
+- Is it mobile-first and responsive down to 375px?
+- Does every interactive element have an ARIA label?
+- Have I loaded the active venture's DESIGN.md — am I building from memory or from spec?
+- Are globals.css and tailwind.config.ts still in sync after this change?
+- Would Jony Ive remove anything from this that doesn't earn its pixel?
+
+### Pass 3 — Fix
+Correct everything found in Pass 2. Run `npx tsc --noEmit` before delivering. If it fails, stay in Pass 3.
+
+---
+
 ## Never Again
 > Populated from session errors. Each entry: [date] — component — issue — rule.
 

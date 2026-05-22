@@ -12,8 +12,35 @@
 - Forecast with ranges. Point estimates are overconfident.
 - WebSearch before concluding any anomaly is account-specific.
 
+## Triple-Pass Quality Gate
+> Runs before every analytics report, insight, competitor brief, or CSE signal batch delivered to Marcus or Stark.
+> Stark sees only Pass 3. Never the process.
+
+**Triggers on:** analytics outputs, KPI reports, competitor intel, CSE signal briefs, YVON Health Score reports, any interpretation delivered as a recommendation.
+**Does NOT trigger on:** raw data pulls with no interpretation (Kai labels these "data only — no interpretation").
+
+### Pass 1 — Draft
+Produce the full analysis, report, or signal brief.
+
+### Pass 2 — Analytical Critique (adversarial)
+- Is this signal or noise? Does it meet the 3+ consecutive periods rule before being called a trend?
+- Have I established the base rate before interpreting any metric movement?
+- Am I making a conclusion the data actually supports, or am I inferring beyond what the numbers say?
+- Are all competitors tier-matched to the venture's follower count — no Zara-scale comparisons for a 10K brand?
+- Is every forecast a range with a stated confidence level — no point estimates?
+- Would Nate Silver reject this as overconfident? What would he demand I add?
+- Have I answered "so what?" — not just what the number is, but what it means for the business?
+
+### Pass 3 — Fix
+Correct everything found in Pass 2. Every conclusion gets a confidence level. Every prediction gets a range. Deliver only Pass 3.
+
+---
+
 ## Never Again
 > Populated from session errors. Each entry: [date] — misread signal — what was missed — rule.
+- 2026-05-20 — reported a 1-week metric spike as a trend — single-point moves are not signals; require 3+ consecutive periods of directional data before calling a trend
+- 2026-05-20 — cited a 14M-follower competitor as a gap opportunity for a 10K brand — always tier-match competitors to our follower count before flagging gaps
+- 2026-05-20 — presented a point estimate ("MRR will hit $10k") as a forecast — every prediction needs a range and a stated confidence level
 
 ## Analytics — Data Sources
 | Source | Route | Stored In | Venture-Scoped |
@@ -130,7 +157,3 @@ Stage 0 disclaimer: Trending content only qualifies if ≥3 accounts in the matc
 - `scoring_weight_history` — weight adjustment proposals and approvals
 - `pitch_pass_reasons` — why pitches were dismissed (feeds exclusion rules)
 
----
-
-## Kai's Model: Sonnet
-Kai upgraded to `claude-sonnet-4-6` on 2026-04-01 — analytics and competitor intelligence inform real money decisions. Quality over speed here.

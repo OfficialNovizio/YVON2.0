@@ -93,10 +93,27 @@ export async function POST(request: Request): Promise<Response> {
   return Response.json({ record: data })
 }
 
-// ── GET — fetch posts pending measurement ─────────────────────────────────────
-export async function GET(): Promise<Response> {
+// ── GET — fetch posts pending measurement (or single record by pitchId) ───────
+export async function GET(request: Request): Promise<Response> {
   const cookieStore = await cookies()
   const slug = cookieStore.get('yvon_active_venture')?.value ?? 'novizio'
+
+  const { searchParams } = new URL(request.url)
+  const pitchId = searchParams.get('pitchId')
+
+  // Single-record lookup for Studio outcome banner
+  if (pitchId) {
+    const { data, error } = await supabase
+      .from('content_performance')
+      .select('id, pitch_id, platform, format, signal_type, outcome, outcome_delta, score_at_suggestion, measured_at, posted_at, calendar_entry_id')
+      .eq('venture_slug', slug)
+      .eq('pitch_id', pitchId)
+      .order('posted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (error) return Response.json({ error: error.message }, { status: 500 })
+    return Response.json({ record: data ?? null })
+  }
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -136,13 +153,15 @@ export async function GET(): Promise<Response> {
   })
 }
 
-// ── PATCH — run measurement (manual or cron T+7) ──────────────────────────────
+// ── PATCH — link calendar entry OR run measurement (manual or cron T+7) ───────
 export async function PATCH(request: Request): Promise<Response> {
   const cookieStore = await cookies()
   const slug = cookieStore.get('yvon_active_venture')?.value ?? 'novizio'
 
   interface PatchBody {
+    action?: 'link_calendar' | 'measure'
     recordId: string
+    calendarEntryId?: string
     actualViews?: number
     actualLikes?: number
     actualComments?: number
@@ -160,6 +179,20 @@ export async function PATCH(request: Request): Promise<Response> {
   catch { return Response.json({ error: 'Invalid JSON' }, { status: 400 }) }
 
   if (!body.recordId) return Response.json({ error: 'recordId required' }, { status: 400 })
+
+  // ── link_calendar: write calendar_entry_id back to an existing record ────────
+  if (body.action === 'link_calendar') {
+    if (!body.calendarEntryId) return Response.json({ error: 'calendarEntryId required' }, { status: 400 })
+    const { data, error } = await supabase
+      .from('content_performance')
+      .update({ calendar_entry_id: body.calendarEntryId })
+      .eq('id', body.recordId)
+      .eq('venture_slug', slug)
+      .select('id, calendar_entry_id')
+      .single()
+    if (error) return Response.json({ error: error.message }, { status: 500 })
+    return Response.json({ record: data })
+  }
 
   const interactions = (body.actualLikes ?? 0) + (body.actualComments ?? 0) +
     (body.actualShares ?? 0) + (body.actualSaves ?? 0)
@@ -205,14 +238,16 @@ export async function PATCH(request: Request): Promise<Response> {
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
-  // After measurement — update signal_reliability for the signal_type
+  // After measurement — update signal_reliability for the signal_type (non-fatal)
   if (data?.signal_type) {
-    await supabase.rpc('update_signal_reliability', {
-      p_venture_slug:  slug,
-      p_signal_type:   data.signal_type as string,
-      p_signal_source: 'content_engine',
-      p_outcome:       outcome,
-    }).catch(() => null)  // non-fatal — table update, not critical path
+    try {
+      await supabase.rpc('update_signal_reliability', {
+        p_venture_slug:  slug,
+        p_signal_type:   data.signal_type as string,
+        p_signal_source: 'content_engine',
+        p_outcome:       outcome,
+      })
+    } catch { /* non-fatal */ }
   }
 
   return Response.json({ record: data, outcome, outcomeDelta })

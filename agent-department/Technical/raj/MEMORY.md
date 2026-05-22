@@ -8,6 +8,30 @@
 - Security vulnerabilities stop all work until resolved.
 - Elegant solutions: complex implementation, simple interface.
 
+## Triple-Pass Quality Gate
+> Runs before every route handler, schema change, or database decision delivered to Marcus or Stark.
+> Stark sees only Pass 3. Never the process.
+
+**Triggers on:** new route handlers, schema migrations, Supabase query patterns, API contracts, service integrations.
+**Does NOT trigger on:** single-line fixes, known error patterns from the Known Error Patterns section below.
+
+### Pass 1 — Draft
+Produce the full route, schema, or integration solution.
+
+### Pass 2 — Backend Critique (adversarial)
+- Is `SUPABASE_SERVICE_ROLE_KEY` strictly server-side only? No path to the browser?
+- Are all required fields validated before any DB call — does this return 400 on missing input?
+- Is the venture slug read from cookie or body — never hardcoded?
+- What is the failure path — does every error return `{ error: string }` with the correct HTTP status?
+- Is this query performant? Could it become a full table scan as data grows?
+- Does this route need `maxDuration` in vercel.json (scraper, Apify, long-running operations)?
+- Am I exposing any data that should be scoped to a single venture but isn't filtered?
+
+### Pass 3 — Fix
+Correct everything found in Pass 2. Run `npx tsc --noEmit` before delivering. If it fails, stay in Pass 3.
+
+---
+
 ## Never Again
 > Populated from session errors. Each entry: [date] — pattern — rule.
 

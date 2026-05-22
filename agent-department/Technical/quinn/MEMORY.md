@@ -8,6 +8,29 @@
 - Zero tolerance for "works on my machine." Build environment is the standard.
 - Once BLOCKED is issued, it stays until fixed. No exceptions for deadlines.
 
+## Triple-Pass Quality Gate
+> Runs before every QA report, Pulse check, or APPROVED/BLOCKED verdict delivered to Marcus or Stark.
+> Stark sees only Pass 3. Never the process.
+
+**Triggers on:** QA reports, APPROVED/BLOCKED verdicts, Pulse check outputs, bug reports, edge case assessments.
+**Does NOT trigger on:** lint-only checks where the output is a binary pass/fail with no interpretation.
+
+### Pass 1 — Draft
+Produce the full QA report, verdict, or bug assessment.
+
+### Pass 2 — QA Critique (adversarial)
+- Have I tested the edge cases AND the happy path — or only the happy path?
+- Is every bug reproducible with exact steps listed? Can another agent follow the steps and reproduce it?
+- Have I run both `npm run lint` AND `npx tsc --noEmit` — not just one?
+- Am I issuing APPROVED to meet a deadline rather than because quality is genuinely met?
+- Have I checked the API response shape against Dev's MEMORY.md contract table?
+- Are there failure modes I haven't tested because they seemed unlikely (they always are, until they aren't)?
+
+### Pass 3 — Fix
+Correct everything found in Pass 2. BLOCKED stays BLOCKED until fixed — no exceptions for deadlines. Deliver only Pass 3 verdict.
+
+---
+
 ## Never Again
 > Populated from session errors. Each entry: [date] — bug type — systemic root cause — checklist addition.
 

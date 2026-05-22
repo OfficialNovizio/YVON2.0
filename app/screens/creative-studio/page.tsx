@@ -36,6 +36,40 @@ interface BriefData {
   audience: string
   tone: string
   platform: string
+  contentType: string
+}
+
+interface StudioSession {
+  id: string
+  created_at: string
+  mode: 'single' | 'storyline' | 'shoot'
+  brief: BriefData
+  moods: MoodDirection[] | null
+  selected_mood_name: string | null
+  script_data: ScriptData | null
+  captions_data: CaptionsData | null
+  prompts_data: PromptsData | null
+  image_urls: { index: number; title: string; url: string }[] | null
+  storyline_data: StorylineData | null
+  shot_list_data: ShotListData | null
+}
+
+interface ShotItem {
+  shotNumber: number
+  title: string
+  framing: string
+  lighting: string
+  direction: string
+  durationOrPacing: string
+  tip: string
+}
+
+interface ShotListData {
+  briefTitle: string
+  postingNote: string
+  captionDraft: string
+  hashtags: string[]
+  shots: ShotItem[]
 }
 
 interface MoodDirection {
@@ -125,6 +159,84 @@ interface AssetState {
 
 const STEPS = ['Brief', 'Mood', 'Script', 'Captions', 'Prompts', 'Assets']
 const STORYLINE_STEPS = ['Brief', 'Storyline']
+const SHOOT_STEPS = ['Brief', 'Mood', 'Shot List']
+
+const PLATFORM_CONTENT_TYPES: Record<string, { types: string[]; default: string; icon: string }> = {
+  Instagram:  { types: ['Reel', 'Post', 'Carousel', 'Story'], default: 'Reel', icon: 'photo_camera' },
+  TikTok:     { types: ['Video', 'Slideshow'],                 default: 'Video', icon: 'music_video' },
+  LinkedIn:   { types: ['Post', 'Article', 'Document'],        default: 'Post', icon: 'work' },
+  YouTube:    { types: ['Short', 'Thumbnail'],                 default: 'Short', icon: 'play_circle' },
+  'Twitter/X': { types: ['Post', 'Thread'],                   default: 'Post', icon: 'tag' },
+}
+
+const CONTENT_TYPE_TO_ASPECT: Record<string, string> = {
+  Reel: '9:16', Video: '9:16', Short: '9:16', Story: '9:16',
+  Post: '1:1', Slideshow: '1:1', Thread: '1:1',
+  Carousel: '4:5', Document: '4:5',
+  Article: '16:9', Thumbnail: '16:9',
+}
+
+const ASPECT_TO_PX: Record<string, { width: number; height: number }> = {
+  '9:16': { width: 768, height: 1368 },
+  '1:1':  { width: 1024, height: 1024 },
+  '4:5':  { width: 820, height: 1024 },
+  '16:9': { width: 1368, height: 768 },
+}
+
+// ── Demo sessions (shown until real sessions exist in DB) ──────────────────────
+const _D = (days: number) => new Date(Date.now() - days * 86400000).toISOString()
+const _H = (hrs: number)  => new Date(Date.now() - hrs  * 3600000).toISOString()
+
+const DEMO_SESSIONS: StudioSession[] = [
+  // Single ──────────────────────────────────────────────────────────────────────
+  {
+    id: 'demo-s1', created_at: _D(2), mode: 'single',
+    brief: { campaignName: 'Spring Drop SS25', objective: 'Launch SS25 hero pieces to Gen Z founders', audience: 'Gen Z founders 22–30, style-conscious', tone: 'Premium / Cinematic', platform: 'Instagram', contentType: 'Reel' },
+    moods: null, selected_mood_name: 'Raw Tension',
+    script_data: { systemRoute: 'System 1', systemRationale: 'IG discovery is almost always System 1.', script: "You've always known what you want. You just needed the clothes to prove it. Novizio SS25 — arriving this week.", psychologyBreakdown: { L1_firstImpression: 'Authority before logic fires', L2_desireHook: 'The viewer becomes the version of themselves they\'ve been building toward', L6_spreadMechanic: 'Identity confirmation — people share what confirms who they are' }, primaryLever: 'L2 — Aspirational Identity Gap' },
+    captions_data: null, prompts_data: { psychologyBrief: 'All 4 images make the viewer want to become more intentional.', prompts: [{ title: 'Power Walk', version: 'V1.0', text: 'Editorial fashion close-up.', psychologyLayer: 'L1 + L2', systemOneEffect: 'Confidence transfer in 2 seconds' }] },
+    image_urls: null, storyline_data: null, shot_list_data: null,
+  },
+  {
+    id: 'demo-s2', created_at: _D(5), mode: 'single',
+    brief: { campaignName: 'Founder Story', objective: 'Build brand trust through authentic founder narrative', audience: 'Millennial professionals 28–38 who value craftsmanship', tone: 'Authentic / Raw', platform: 'LinkedIn', contentType: 'Article' },
+    moods: null, selected_mood_name: 'Quiet Authority',
+    script_data: { systemRoute: 'System 2', systemRationale: 'LinkedIn articles engage deliberate processing.', script: "Three years ago I couldn't find clothes that matched how I thought. So I built them. Here's what I learned.", psychologyBreakdown: { L1_firstImpression: 'Authenticity signal — imperfection as credibility', L2_desireHook: 'The reader becomes someone who builds, not just buys', L6_spreadMechanic: 'Curiosity gap — the hook implies a hard-won lesson' }, primaryLever: 'L6 — Curiosity Gap' },
+    captions_data: null, prompts_data: null, image_urls: null, storyline_data: null, shot_list_data: null,
+  },
+  // Storyline ───────────────────────────────────────────────────────────────────
+  {
+    id: 'demo-st1', created_at: _D(1), mode: 'storyline',
+    brief: { campaignName: 'Summer Lookbook', objective: 'Showcase 3 summer looks across a day-in-the-life narrative', audience: 'Gen Z style-conscious women 20–28', tone: 'Authentic / Raw', platform: 'Instagram', contentType: 'Reel' },
+    moods: null, selected_mood_name: 'Golden Hour Drift',
+    script_data: null, captions_data: null, prompts_data: null, image_urls: null,
+    storyline_data: { storylineTitle: 'One Day, Three Looks', totalDuration: 38, hook: 'Three looks. One weekend. Zero compromises.', scenes: [], platformFit: { instagram_reel: { maxDuration: 90, fits: true, recommendation: 'Perfect for IG Reel.' }, tiktok: { maxDuration: 60, fits: true, recommendation: 'Fits TikTok well.' }, youtube_short: { maxDuration: 60, fits: true, recommendation: 'Good fit for YouTube Shorts.' } }, noSoundSummary: '4/5 — strong visual narrative', editingNotes: 'Cut on beat. Warm filter throughout.' },
+    shot_list_data: null,
+  },
+  {
+    id: 'demo-st2', created_at: _D(4), mode: 'storyline',
+    brief: { campaignName: 'Brand Origin Film', objective: 'Tell the Novizio origin story in under 60 seconds', audience: 'Fashion-forward professionals who care about intentional brands', tone: 'Minimal / Quiet Luxury', platform: 'TikTok', contentType: 'Video' },
+    moods: null, selected_mood_name: 'Monolith',
+    script_data: null, captions_data: null, prompts_data: null, image_urls: null,
+    storyline_data: { storylineTitle: 'Built Different', totalDuration: 52, hook: 'Most fashion brands start with a mood board. We started with a question.', scenes: [], platformFit: { instagram_reel: { maxDuration: 90, fits: true, recommendation: 'Strong IG crosspost.' }, tiktok: { maxDuration: 60, fits: true, recommendation: 'Fits at 52s.' }, youtube_short: { maxDuration: 60, fits: false, recommendation: 'Trim to 55s for YT Short.' } }, noSoundSummary: '5/5 — every scene tells the story visually', editingNotes: 'Minimal music. Let silence carry scenes 1 and 4.' },
+    shot_list_data: null,
+  },
+  // Shoot ───────────────────────────────────────────────────────────────────────
+  {
+    id: 'demo-sh1', created_at: _H(8), mode: 'shoot',
+    brief: { campaignName: 'Product Detail Week', objective: 'Show craftsmanship — stitching, fabric, silhouette', audience: 'Quality-conscious buyers researching before purchase', tone: 'Minimal / Quiet Luxury', platform: 'Instagram', contentType: 'Carousel' },
+    moods: null, selected_mood_name: 'Still Life Study',
+    script_data: null, captions_data: null, prompts_data: null, image_urls: null, storyline_data: null,
+    shot_list_data: { briefTitle: 'Still Life Series', postingNote: 'Post midweek 12–2pm when buyers browse.', captionDraft: "The details that don't photograph themselves. We made them photograph themselves.", hashtags: ['#Novizio', '#QuietLuxury', '#FashionDetails', '#SlowFashion', '#CraftFirst', '#SS25'], shots: [] },
+  },
+  {
+    id: 'demo-sh2', created_at: _D(3), mode: 'shoot',
+    brief: { campaignName: 'Street Cast — Vol.1', objective: 'Authentic street-style campaign with real people', audience: 'Gen Z discovery audience — broad reach', tone: 'Bold / Disruptive', platform: 'TikTok', contentType: 'Video' },
+    moods: null, selected_mood_name: 'Raw Signal',
+    script_data: null, captions_data: null, prompts_data: null, image_urls: null, storyline_data: null,
+    shot_list_data: { briefTitle: 'Handheld Reality', postingNote: 'Post Friday 6–8pm for weekend discovery peak on TikTok.', captionDraft: 'Real people. Real fits. No stylist required.', hashtags: ['#Novizio', '#StreetStyle', '#RealFashion', '#NoPosing', '#StreetCast', '#GRWM'], shots: [] },
+  },
+]
 
 const KREA_MODELS = [
   { id: 'bfl/flux-1-dev',       label: 'Flux Dev',       note: 'Fast · ~4s' },
@@ -239,11 +351,11 @@ export default function CreativeStudioPage() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
 
-  // Mode: single = existing 6-step flow, storyline = pitch → scenes
-  const [mode, setMode] = useState<'single' | 'storyline'>('single')
+  // Mode: single = existing 6-step flow, storyline = pitch → scenes, shoot = phone-shoot brief
+  const [mode, setMode] = useState<'single' | 'storyline' | 'shoot'>('single')
 
   // Step data
-  const [brief, setBrief]           = useState<BriefData>({ campaignName: '', objective: '', audience: '', tone: 'Premium / Cinematic', platform: 'Instagram' })
+  const [brief, setBrief]           = useState<BriefData>({ campaignName: '', objective: '', audience: '', tone: 'Premium / Cinematic', platform: 'Instagram', contentType: 'Reel' })
   const [moods, setMoods]           = useState<MoodDirection[]>([])
   const [selectedMood, setSelectedMood] = useState<number | null>(null)
   const [scriptData, setScriptData] = useState<ScriptData | null>(null)
@@ -253,6 +365,15 @@ export default function CreativeStudioPage() {
   // Storyline mode data
   const [storylineData, setStorylineData] = useState<StorylineData | null>(null)
   const [copiedScene, setCopiedScene] = useState<string | null>(null)
+
+  // Shoot mode
+  const [shotListData, setShotListData] = useState<ShotListData | null>(null)
+  const [copiedShot, setCopiedShot] = useState<string | null>(null)
+
+  // Session history
+  const [sessions, setSessions]           = useState<StudioSession[]>([])
+  const [savedAt, setSavedAt]             = useState<string | null>(null)
+  const hasSavedRef = useRef(false)
 
   // Outfit Builder
   const [outfits, setOutfits] = useState<SceneOutfit[]>([])
@@ -277,6 +398,10 @@ export default function CreativeStudioPage() {
   const [schedSaving,   setSchedSaving]   = useState(false)
   const [schedDone,     setSchedDone]     = useState(false)
 
+  // CSE outcome banner — loaded when Studio is opened from a pitch
+  interface PerfOutcome { id: string; outcome: 'overperformed' | 'met' | 'underperformed' | null; outcome_delta: number | null; measured_at: string | null; score_at_suggestion: number | null; signal_type: string | null }
+  const [cseOutcome, setCseOutcome] = useState<PerfOutcome | null>(null)
+
   // Pre-fill brief from Marketing board pitch URL params
   useEffect(() => {
     const hook     = searchParams.get('hook')
@@ -284,18 +409,54 @@ export default function CreativeStudioPage() {
     const format   = searchParams.get('format')
     if (hook || platform) {
       const rawPlatform = platform ?? 'Instagram'
-      const knownPlatform = ['Instagram', 'TikTok', 'LinkedIn', 'YouTube', 'Twitter/X'].find(
+      const knownPlatform = Object.keys(PLATFORM_CONTENT_TYPES).find(
         p => rawPlatform.toLowerCase().includes(p.toLowerCase())
       ) ?? 'Instagram'
+      const defaultContentType = PLATFORM_CONTENT_TYPES[knownPlatform]?.default ?? 'Post'
       setBrief(prev => ({
         ...prev,
         campaignName: format ? format.replace(/\(.*?\)/g, '').trim() : prev.campaignName,
         objective:    hook ? hook.slice(0, 200) : prev.objective,
         platform:     knownPlatform,
+        contentType:  defaultContentType,
       }))
       setMode('storyline')
     }
   }, [searchParams])
+
+  // Fetch CSE performance record if opened from a pitch
+  useEffect(() => {
+    const pitchId = searchParams.get('pitch')
+    if (!pitchId) return
+    fetch(`/api/content-performance?pitchId=${encodeURIComponent(pitchId)}`)
+      .then(r => r.json())
+      .then((d: { record?: PerfOutcome | null }) => { if (d.record) setCseOutcome(d.record) })
+      .catch(() => null)
+  }, [searchParams])
+
+  // Brief persistence
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('yvon_studio_brief')
+      if (saved) setBrief(prev => ({ ...prev, ...(JSON.parse(saved) as Partial<BriefData>) }))
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    try { localStorage.setItem('yvon_studio_brief', JSON.stringify(brief)) } catch { /* ignore */ }
+  }, [brief])
+
+  // Auto-save when key content is first generated
+  useEffect(() => { if (promptsData && mode === 'single') saveSession() }, [promptsData])     // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (storylineData && mode === 'storyline') saveSession() }, [storylineData]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (shotListData && mode === 'shoot') saveSession() }, [shotListData])     // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset save ref when mode changes (new session)
+  useEffect(() => { hasSavedRef.current = false; setSavedAt(null) }, [mode])
+
+  // Fetch real sessions on mount (falls back to DEMO_SESSIONS if empty/fails)
+  useEffect(() => { fetchHistory() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cleanup polling timers on unmount
   useEffect(() => {
@@ -384,11 +545,14 @@ export default function CreativeStudioPage() {
     if (!promptsData?.prompts[index]) return
     setAssets(prev => prev.map((a, i) => i === index ? { ...a, status: 'generating', error: null } : a))
 
+    const aspect = CONTENT_TYPE_TO_ASPECT[brief.contentType] ?? '1:1'
+    const dims = ASPECT_TO_PX[aspect] ?? { width: 1024, height: 1024 }
+
     try {
       const res = await fetch('/api/krea/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: promptsData.prompts[index].text, model }),
+        body: JSON.stringify({ prompt: promptsData.prompts[index].text, model, ...dims }),
       })
       const data = await res.json() as { jobId?: string; error?: string }
       if (!res.ok || !data.jobId) throw new Error(data.error ?? 'Failed to start generation')
@@ -470,6 +634,12 @@ export default function CreativeStudioPage() {
     }
   }
 
+  async function handleShootGenerate() {
+    if (selectedMood === null) { setError('Select a mood direction to continue.'); return }
+    const data = await callStudio('generate-shot-list', { selectedMood: moods[selectedMood]?.name })
+    if (data?.shots) { setShotListData(data as unknown as ShotListData); setStep(2) }
+  }
+
   function handleCopyScene(key: string, text: string) {
     navigator.clipboard.writeText(text).catch(() => {})
     setCopiedScene(key)
@@ -516,6 +686,101 @@ export default function CreativeStudioPage() {
     setTimeout(() => setCopied(null), 2000)
   }
 
+  // ── Session history ─────────────────────────────────────────────────────────
+
+  async function fetchHistory() {
+    try {
+      const res = await fetch('/api/studio-sessions')
+      const data = await res.json() as { sessions?: StudioSession[] }
+      setSessions(data.sessions ?? [])
+    } catch { /* non-fatal — demo data shows as fallback */ }
+  }
+
+  async function saveSession() {
+    if (hasSavedRef.current) return
+    hasSavedRef.current = true
+
+    const imageUrlsPayload = assets
+      .map((a, i) => ({ index: i, title: promptsData?.prompts[i]?.title ?? '', url: a.imageUrl ?? '' }))
+      .filter(u => u.url)
+
+    try {
+      await fetch('/api/studio-sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode,
+          brief,
+          moods: moods.length ? moods : null,
+          selectedMoodName: selectedMood !== null ? moods[selectedMood]?.name ?? null : null,
+          scriptData:    scriptData ?? null,
+          captionsData:  captionsData ?? null,
+          promptsData:   promptsData ?? null,
+          imageUrls:     imageUrlsPayload,
+          storylineData: storylineData ?? null,
+          shotListData:  shotListData ?? null,
+        }),
+      })
+      setSavedAt(new Date().toISOString())
+    } catch { hasSavedRef.current = false /* allow retry */ }
+  }
+
+  function loadSession(session: StudioSession) {
+    setMode(session.mode)
+    setBrief(session.brief)
+    if (session.moods?.length) {
+      setMoods(session.moods)
+      const idx = session.moods.findIndex(m => m.name === session.selected_mood_name)
+      setSelectedMood(idx >= 0 ? idx : null)
+    }
+    if (session.script_data)   setScriptData(session.script_data)
+    if (session.captions_data) setCaptionsData(session.captions_data)
+    if (session.prompts_data) {
+      setPromptsData(session.prompts_data)
+      const urlMap = new Map((session.image_urls ?? []).map(u => [u.index, u.url]))
+      setAssets(session.prompts_data.prompts.map((_, i) => ({
+        jobId: null,
+        status: urlMap.has(i) ? 'done' as const : 'idle' as const,
+        imageUrl: urlMap.get(i) ?? null,
+        error: null,
+      })))
+    }
+    if (session.storyline_data) setStorylineData(session.storyline_data)
+    if (session.shot_list_data) setShotListData(session.shot_list_data)
+
+    // Jump to last completed step
+    let targetStep = 0
+    if (session.mode === 'single') {
+      if (session.prompts_data) targetStep = 4
+      else if (session.captions_data) targetStep = 3
+      else if (session.script_data) targetStep = 2
+      else if (session.moods?.length) targetStep = 1
+    } else if (session.mode === 'storyline') {
+      targetStep = session.storyline_data ? 1 : 0
+    } else if (session.mode === 'shoot') {
+      targetStep = session.shot_list_data ? 2 : session.moods?.length ? 1 : 0
+    }
+    setStep(targetStep)
+    setError(null)
+    hasSavedRef.current = true // loaded session counts as already saved
+  }
+
+  function remixSession(session: StudioSession) {
+    setMode(session.mode)
+    setBrief(session.brief)
+    setMoods([])
+    setSelectedMood(null)
+    setScriptData(null)
+    setCaptionsData(null)
+    setPromptsData(null)
+    setAssets([])
+    setStorylineData(null)
+    setShotListData(null)
+    setStep(0)
+    setError(null)
+    hasSavedRef.current = false // new content will need saving
+  }
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -547,20 +812,49 @@ export default function CreativeStudioPage() {
                 </span>
               )}
             </div>
+            {savedAt && (
+              <span style={{ fontSize: 11, color: 'rgba(52,211,153,0.70)' }} className="flex items-center gap-1">
+                <span className="material-symbols-outlined" style={{ fontSize: 12 }}>cloud_done</span>
+                Saved to history
+              </span>
+            )}
           </div>
         </div>
       </div>
+
+      {/* CSE outcome banner */}
+      {cseOutcome && (
+        <div className="mb-6 px-4 py-3 rounded-xl flex items-center gap-3" style={{
+          background: cseOutcome.outcome === 'overperformed' ? 'rgba(52,211,153,0.08)' : cseOutcome.outcome === 'underperformed' ? 'rgba(248,113,113,0.08)' : cseOutcome.measured_at ? 'rgba(96,165,250,0.08)' : 'rgba(251,191,36,0.08)',
+          border: `1px solid ${cseOutcome.outcome === 'overperformed' ? 'rgba(52,211,153,0.22)' : cseOutcome.outcome === 'underperformed' ? 'rgba(248,113,113,0.22)' : cseOutcome.measured_at ? 'rgba(96,165,250,0.22)' : 'rgba(251,191,36,0.22)'}`,
+        }}>
+          <span className="material-symbols-outlined text-[18px]" style={{ color: cseOutcome.outcome === 'overperformed' ? '#34d399' : cseOutcome.outcome === 'underperformed' ? '#f87171' : cseOutcome.measured_at ? '#60a5fa' : '#fbbf24' }}>
+            {cseOutcome.outcome === 'overperformed' ? 'trending_up' : cseOutcome.outcome === 'underperformed' ? 'trending_down' : cseOutcome.measured_at ? 'trending_flat' : 'schedule'}
+          </span>
+          <div className="flex-1">
+            <p style={{ fontSize: 12, fontWeight: 700, margin: 0, color: cseOutcome.outcome === 'overperformed' ? '#34d399' : cseOutcome.outcome === 'underperformed' ? '#f87171' : cseOutcome.measured_at ? '#60a5fa' : '#fbbf24' }}>
+              {cseOutcome.measured_at
+                ? `CSE outcome: ${cseOutcome.outcome ?? 'measured'}${cseOutcome.outcome_delta != null ? ` (${cseOutcome.outcome_delta > 0 ? '+' : ''}${cseOutcome.outcome_delta.toFixed(0)}% vs benchmark)` : ''}`
+                : 'Awaiting measurement — post tracked by CSE'}
+            </p>
+            {cseOutcome.signal_type && (
+              <p style={{ fontSize: 11, color: 'rgba(12,44,82,0.50)', margin: 0 }}>Signal: {cseOutcome.signal_type.replace(/_/g, ' ')}{cseOutcome.score_at_suggestion != null ? ` · Score at suggestion: ${cseOutcome.score_at_suggestion}` : ''}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Mode toggle */}
       <div className="flex items-center justify-center mb-8">
         <div className="flex gap-1 p-1 rounded-full" style={{ background: L1, border: `1px solid rgba(255,255,255,0.08)` }}>
           {([
-            { key: 'single' as const, label: 'Single Content', icon: 'article' },
-            { key: 'storyline' as const, label: 'Storyline', icon: 'movie' },
+            { key: 'single' as const,    label: 'Single Content', icon: 'article' },
+            { key: 'storyline' as const, label: 'Storyline',      icon: 'movie' },
+            { key: 'shoot' as const,     label: 'Shoot Mode',     icon: 'photo_camera' },
           ]).map(({ key, label, icon }) => (
             <button
               key={key}
-              onClick={() => { setMode(key); setStep(0); setError(null); setStorylineData(null) }}
+              onClick={() => { setMode(key); setStep(0); setError(null); setStorylineData(null); setShotListData(null) }}
               className="flex items-center gap-2 transition-all"
               style={{
                 padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600,
@@ -577,7 +871,7 @@ export default function CreativeStudioPage() {
 
       {/* Stepper */}
       <div className="flex items-center justify-center mb-12">
-        {(mode === 'storyline' ? STORYLINE_STEPS : STEPS).map((label, i) => (
+        {(mode === 'storyline' ? STORYLINE_STEPS : mode === 'shoot' ? SHOOT_STEPS : STEPS).map((label, i) => (
           <div key={label} className="flex items-center">
             <div className="flex flex-col items-center gap-2">
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold transition-all" style={{
@@ -594,7 +888,7 @@ export default function CreativeStudioPage() {
                 color: i === step ? ACCENT : i < step ? I1c : I1d,
               }}>{label}</span>
             </div>
-            {i < (mode === 'storyline' ? STORYLINE_STEPS : STEPS).length - 1 && (
+            {i < (mode === 'storyline' ? STORYLINE_STEPS : mode === 'shoot' ? SHOOT_STEPS : STEPS).length - 1 && (
               <div className="h-px mb-6 mx-1" style={{ width: 48, background: i < step ? ACCENT : L1 }} />
             )}
           </div>
@@ -633,23 +927,67 @@ export default function CreativeStudioPage() {
               />
             </div>
           ))}
-          <div className="grid grid-cols-2 gap-4">
-            {([
-              { label: 'Platform', key: 'platform', options: ['Instagram', 'TikTok', 'LinkedIn', 'YouTube', 'Twitter/X'] },
-              { label: 'Tone', key: 'tone', options: ['Premium / Cinematic', 'Authentic / Raw', 'Bold / Disruptive', 'Minimal / Quiet Luxury', 'Playful / Gen Z'] },
-            ] as const).map(({ label, key, options }) => (
-              <div key={key} style={{ ...G1, padding: '20px 24px' }}>
-                <label className="block mb-3" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: I3d }}>{label}</label>
-                <select
-                  value={brief[key]}
-                  onChange={e => setBrief(prev => ({ ...prev, [key]: e.target.value }))}
-                  className="w-full bg-transparent outline-none cursor-pointer"
-                  style={{ fontSize: 14, color: I3c }}
+          {/* Platform tiles */}
+          <div style={{ ...G1, padding: '20px 24px' }}>
+            <label className="block mb-3" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: I3d }}>Platform</label>
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(PLATFORM_CONTENT_TYPES).map(([pl, meta]) => (
+                <button
+                  key={pl}
+                  onClick={() => setBrief(prev => ({ ...prev, platform: pl, contentType: meta.default }))}
+                  className="flex items-center gap-2 transition-all active:scale-95"
+                  style={{
+                    padding: '8px 16px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    background: brief.platform === pl ? ACCENT : L1,
+                    color: brief.platform === pl ? '#fff' : I1d,
+                  }}
                 >
-                  {options.map(o => <option key={o} value={o} className="bg-transparent">{o}</option>)}
-                </select>
-              </div>
-            ))}
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{meta.icon}</span>
+                  {pl}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Content type chips + aspect ratio */}
+          <div style={{ ...G1, padding: '20px 24px' }}>
+            <div className="flex items-center justify-between mb-3">
+              <label style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: I3d }}>Content Type</label>
+              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full" style={{ background: `${ACCENT}15`, color: ACCENT, border: `1px solid ${ACCENT}25` }}>
+                {CONTENT_TYPE_TO_ASPECT[brief.contentType] ?? '1:1'}
+              </span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {(PLATFORM_CONTENT_TYPES[brief.platform]?.types ?? []).map(ct => (
+                <button
+                  key={ct}
+                  onClick={() => setBrief(prev => ({ ...prev, contentType: ct }))}
+                  className="transition-all active:scale-95"
+                  style={{
+                    padding: '6px 14px', borderRadius: 999, border: `1px solid ${brief.contentType === ct ? ACCENT : CARD_BORDER}`, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                    background: brief.contentType === ct ? `${ACCENT}18` : CARD_BG,
+                    color: brief.contentType === ct ? ACCENT : I3d,
+                  }}
+                >
+                  {ct}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Tone */}
+          <div style={{ ...G1, padding: '20px 24px' }}>
+            <label className="block mb-3" style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.15em', color: I3d }}>Tone</label>
+            <select
+              value={brief.tone}
+              onChange={e => setBrief(prev => ({ ...prev, tone: e.target.value }))}
+              className="w-full bg-transparent outline-none cursor-pointer"
+              style={{ fontSize: 14, color: I3c }}
+            >
+              {['Premium / Cinematic', 'Authentic / Raw', 'Bold / Disruptive', 'Minimal / Quiet Luxury', 'Playful / Gen Z'].map(o => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
           </div>
         </div>
       )}
@@ -728,7 +1066,17 @@ export default function CreativeStudioPage() {
             <span className="text-[12px]" style={{ color: I1d }}>{scriptData.systemRationale}</span>
           </div>
           <div style={{ ...G3, padding: 32 }} className="mb-6">
-            <p className="text-[15px] whitespace-pre-wrap" style={{ color: I3c, lineHeight: '1.7' }}>{scriptData.script}</p>
+            <textarea
+              value={scriptData.script}
+              onChange={e => {
+                const el = e.target
+                el.style.height = 'auto'
+                el.style.height = `${el.scrollHeight}px`
+                setScriptData(prev => prev ? { ...prev, script: e.target.value } : prev)
+              }}
+              className="w-full outline-none resize-none bg-transparent"
+              style={{ fontSize: 15, color: I3c, lineHeight: '1.7', overflow: 'hidden', minHeight: 80 }}
+            />
           </div>
           <div className="flex items-center justify-between mb-3">
             <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: I1d }}>Psychology Breakdown</p>
@@ -877,7 +1225,7 @@ export default function CreativeStudioPage() {
                   {scene.voiceoverText && (
                     <div className="flex items-start gap-2 px-4 py-3 rounded-[10px]" style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
                       <span className="material-symbols-outlined flex-shrink-0 mt-0.5" style={{ fontSize: 14, color: I3d }}>record_voice_over</span>
-                      <p className="text-[12px] italic" style={{ color: I3c, lineHeight: '1.5' }}>"{scene.voiceoverText}"</p>
+                      <p className="text-[12px] italic" style={{ color: I3c, lineHeight: '1.5' }}>&quot;{scene.voiceoverText}&quot;</p>
                     </div>
                   )}
                 </div>
@@ -1051,10 +1399,101 @@ export default function CreativeStudioPage() {
               <div className="text-center py-10" style={{ border: `1px dashed rgba(255,255,255,0.10)`, borderRadius: 18 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 36, color: I1d, display: 'block', marginBottom: 10 }}>checkroom</span>
                 <p className="text-[13px] font-semibold mb-1" style={{ color: I1d }}>No outfits yet</p>
-                <p className="text-[12px]" style={{ color: I1d }}>Click "Build Outfits" to assign looks from your clothing line to each scene</p>
+                <p className="text-[12px]" style={{ color: I1d }}>Click &quot;Build Outfits&quot; to assign looks from your clothing line to each scene</p>
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── SHOOT MODE — STEP 2: Shot List ────────────────────────────────── */}
+      {mode === 'shoot' && step === 2 && shotListData && (
+        <div>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <span className="material-symbols-outlined" style={{ fontSize: 36, color: ACCENT, display: 'block', marginBottom: 10 }}>photo_camera</span>
+            <h2 className="text-[24px] font-semibold mb-2" style={{ letterSpacing: '-0.24px', color: I1 }}>
+              {shotListData.briefTitle}
+            </h2>
+            <p className="text-[13px]" style={{ color: I1d, maxWidth: 500, margin: '0 auto' }}>{shotListData.postingNote}</p>
+          </div>
+
+          {/* Shot cards */}
+          <div className="space-y-5 mb-8">
+            {shotListData.shots.map((shot) => (
+              <div key={shot.shotNumber} style={{ ...G1, padding: 28 }}>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0" style={{ background: `${ACCENT}20`, color: ACCENT }}>
+                    {shot.shotNumber}
+                  </div>
+                  <h3 className="text-[15px] font-semibold" style={{ color: '#f1f5fb' }}>{shot.title}</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  {[
+                    { label: 'Framing', value: shot.framing,        icon: 'crop_free',      color: ACCENT },
+                    { label: 'Lighting', value: shot.lighting,       icon: 'wb_sunny',       color: '#fbbf24' },
+                    { label: 'Direction', value: shot.direction,     icon: 'person',         color: '#a78bfa' },
+                    { label: 'Pacing', value: shot.durationOrPacing, icon: 'timer',          color: '#34d399' },
+                  ].map(({ label, value, icon, color }) => (
+                    <div key={label} style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 14, padding: '14px 16px' }}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5" style={{ color }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 12 }}>{icon}</span>
+                        {label}
+                      </p>
+                      <p className="text-[13px]" style={{ color: I3c, lineHeight: '1.6' }}>{value}</p>
+                    </div>
+                  ))}
+                </div>
+                {/* Tip */}
+                <div className="flex items-start gap-2.5 px-4 py-3 rounded-[12px]" style={{ background: `${ACCENT}08`, border: `1px solid ${ACCENT}20` }}>
+                  <span className="material-symbols-outlined flex-shrink-0 mt-0.5" style={{ fontSize: 14, color: ACCENT }}>lightbulb</span>
+                  <p className="text-[12px]" style={{ color: I3c, lineHeight: '1.5' }}><span style={{ fontWeight: 700, color: ACCENT }}>Pro tip: </span>{shot.tip}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Caption draft */}
+          <div style={{ ...G1, padding: 28, marginBottom: 20 }}>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2" style={{ color: I3d }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>edit_note</span>
+                Caption Draft
+              </p>
+              <button
+                onClick={() => { navigator.clipboard.writeText(shotListData.captionDraft).catch(() => {}); setCopiedShot('caption'); setTimeout(() => setCopiedShot(null), 2000) }}
+                className="flex items-center gap-1.5 active:scale-95 transition-all"
+                style={{ fontSize: 11, fontWeight: 600, color: I3d, background: CARD_BG, border: `1px solid ${CARD_BORDER}`, padding: '6px 14px', borderRadius: 999, cursor: 'pointer' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 12 }}>{copiedShot === 'caption' ? 'check' : 'content_copy'}</span>
+                {copiedShot === 'caption' ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <p className="text-[14px] whitespace-pre-wrap" style={{ color: '#f1f5fb', lineHeight: '1.7' }}>{shotListData.captionDraft}</p>
+          </div>
+
+          {/* Hashtags */}
+          <div style={{ ...G1, padding: '16px 24px', marginBottom: 24 }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: I3d }}>Hashtags</p>
+            <div className="flex flex-wrap gap-2">
+              {shotListData.hashtags.map(tag => (
+                <span key={tag} className="text-[12px] px-3 py-1 rounded-full font-medium" style={{ background: `${ACCENT}12`, color: ACCENT, border: `1px solid ${ACCENT}25` }}>{tag}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Schedule */}
+          <SchedulePanel
+            show={showSchedule}
+            done={schedDone}
+            saving={schedSaving}
+            date={schedDate}
+            status={schedStatus}
+            onToggle={() => { setShowSchedule(v => !v); setSchedDone(false) }}
+            onDateChange={setSchedDate}
+            onStatusChange={setSchedStatus}
+            onSchedule={handleSchedule}
+          />
         </div>
       )}
 
@@ -1389,7 +1828,7 @@ export default function CreativeStudioPage() {
 
       {/* ── Navigation ─────────────────────────────────────────────────────── */}
       <div className="mt-12 flex items-center justify-center gap-4">
-        {step > 0 && (mode === 'storyline' ? step < 2 : step < 5) && (
+        {step > 0 && (mode === 'storyline' ? step < 2 : mode === 'shoot' ? step < 3 : step < 5) && (
           <button onClick={() => { setStep(s => Math.max(0, s - 1)); setError(null) }}
             style={{ background: L1, color: I1d, border: 'none', fontSize: 13, fontWeight: 600, padding: '12px 24px', borderRadius: 999, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
             className="active:scale-95 transition-all">
@@ -1404,6 +1843,26 @@ export default function CreativeStudioPage() {
             {loading
               ? <><span className="material-symbols-outlined animate-spin" style={{ fontSize: 16 }}>progress_activity</span>Building Storyline…</>
               : <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>movie</span>Generate Storyline</>
+            }
+          </button>
+        )}
+        {step === 0 && mode === 'shoot' && (
+          <button onClick={handleBriefNext} disabled={loading}
+            style={{ background: ACCENT, color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, padding: '12px 28px', borderRadius: 999, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: loading ? 0.4 : 1 }}
+            className="transition-all active:scale-95">
+            {loading
+              ? <><span className="material-symbols-outlined animate-spin" style={{ fontSize: 16 }}>progress_activity</span>Generating Mood…</>
+              : <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>photo_camera</span>Generate Mood Directions</>
+            }
+          </button>
+        )}
+        {step === 1 && mode === 'shoot' && (
+          <button onClick={handleShootGenerate} disabled={loading || selectedMood === null}
+            style={{ background: ACCENT, color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, padding: '12px 28px', borderRadius: 999, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: (loading || selectedMood === null) ? 0.4 : 1 }}
+            className="transition-all active:scale-95">
+            {loading
+              ? <><span className="material-symbols-outlined animate-spin" style={{ fontSize: 16 }}>progress_activity</span>Building Shot List…</>
+              : <><span className="material-symbols-outlined" style={{ fontSize: 16 }}>photo_camera</span>Generate Shot List</>
             }
           </button>
         )}
@@ -1456,6 +1915,275 @@ export default function CreativeStudioPage() {
           </button>
         )}
       </div>
+
+      {/* ── Inline Session History — shown on Brief step only ───────────── */}
+      {step === 0 && (() => {
+        const pool       = sessions.length > 0 ? sessions : DEMO_SESSIONS
+        const filtered   = pool.filter(s => s.mode === mode)
+        const isDemoData = sessions.length === 0
+        if (filtered.length === 0) return null
+
+        const modeLabel = mode === 'single' ? 'Single Content' : mode === 'storyline' ? 'Storyline' : 'Shoot Mode'
+        const modeColor = mode === 'single' ? ACCENT : mode === 'storyline' ? '#a78bfa' : '#34d399'
+        const modeIcon  = mode === 'single' ? 'article' : mode === 'storyline' ? 'movie' : 'photo_camera'
+
+        const relativeDate = (iso: string) => {
+          const diffMs = Date.now() - new Date(iso).getTime()
+          const h = Math.floor(diffMs / 3600000)
+          const d = Math.floor(diffMs / 86400000)
+          if (h < 1) return 'Just now'
+          if (h < 24) return `${h}h ago`
+          if (d < 7) return `${d}d ago`
+          return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        }
+
+        return (
+          <div className="mt-16">
+
+            {/* Section header */}
+            <div className="flex items-center gap-3 mb-6">
+              <span className="material-symbols-outlined" style={{ fontSize: 15, color: modeColor }}>{modeIcon}</span>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: modeColor }}>
+                Recent · {modeLabel}
+              </p>
+              <div className="flex-1 h-px" style={{ background: `linear-gradient(to right,${modeColor}35,transparent)` }} />
+              {isDemoData && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.10)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.20)' }}>
+                  demo
+                </span>
+              )}
+              <span className="text-[11px]" style={{ color: I1d }}>{filtered.length} session{filtered.length !== 1 ? 's' : ''}</span>
+              <button onClick={fetchHistory} className="active:scale-95 transition-all" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: I3d }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>refresh</span>
+              </button>
+            </div>
+
+            {/* 2-column card grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filtered.map(session => {
+                const aspect = CONTENT_TYPE_TO_ASPECT[session.brief.contentType] ?? '1:1'
+                const thumb  = session.image_urls?.[0]?.url ?? null
+
+                return (
+                  <div key={session.id} style={{ ...G1, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+
+                    {/* ── Visual preview area ── */}
+                    <div style={{ position: 'relative', height: 200, background: L1, overflow: 'hidden', flexShrink: 0 }}>
+                      {thumb ? (
+                        <img src={thumb} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        /* Styled placeholder — shows platform, aspect, campaign context */
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-3" style={{
+                          background: `linear-gradient(140deg,${modeColor}14 0%,rgba(8,14,28,0.85) 100%)`,
+                          borderBottom: `1px solid ${modeColor}20`,
+                        }}>
+                          {/* Aspect frame */}
+                          <div style={{
+                            width:  aspect === '9:16' ? 54 : aspect === '16:9' ? 120 : aspect === '4:5' ? 70 : 88,
+                            height: aspect === '9:16' ? 96 : aspect === '16:9' ? 67 : aspect === '4:5' ? 88 : 88,
+                            border: `2px solid ${modeColor}55`,
+                            borderRadius: 10,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 5,
+                            background: `${modeColor}0a`,
+                            flexShrink: 0,
+                          }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 20, color: `${modeColor}99` }}>
+                              {session.mode === 'shoot' ? 'photo_camera' : session.mode === 'storyline' ? 'movie' : 'image'}
+                            </span>
+                          </div>
+                          {/* Labels */}
+                          <div className="flex flex-col items-center gap-1">
+                            <p className="text-[11px] font-bold" style={{ color: `${modeColor}cc` }}>
+                              {session.brief.platform} · {session.brief.contentType}
+                            </p>
+                            <p className="text-[10px]" style={{ color: I3d }}>{aspect} · No image generated</p>
+                          </div>
+                        </div>
+                      )}
+                      {/* Aspect ratio badge — always shown top-right */}
+                      <span className="absolute top-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-full" style={{
+                        background: 'rgba(8,14,28,0.75)', backdropFilter: 'blur(8px)',
+                        color: modeColor, border: `1px solid ${modeColor}35`,
+                      }}>
+                        {aspect}
+                      </span>
+                      {/* Date badge — top-left */}
+                      <span className="absolute top-3 left-3 text-[10px] px-2.5 py-1 rounded-full" style={{
+                        background: 'rgba(8,14,28,0.75)', backdropFilter: 'blur(8px)',
+                        color: I3d, border: `1px solid rgba(255,255,255,0.10)`,
+                      }}>
+                        {relativeDate(session.created_at)}
+                      </span>
+                    </div>
+
+                    {/* ── Card body ── */}
+                    <div className="flex flex-col flex-1 gap-4 p-5">
+
+                      {/* Meta row: platform · type */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11px] font-semibold" style={{ color: I3c }}>{session.brief.platform}</span>
+                          <span style={{ width: 2, height: 2, borderRadius: '50%', background: I1d, display: 'inline-block' }} />
+                          <span className="text-[11px]" style={{ color: I3d }}>{session.brief.contentType}</span>
+                        </div>
+                      </div>
+
+                      {/* Campaign name + mood */}
+                      <div className="flex flex-col gap-2">
+                        <p className="text-[15px] font-semibold leading-snug" style={{ color: '#f1f5fb', letterSpacing: '-0.15px' }}>
+                          {session.brief.campaignName || 'Untitled Campaign'}
+                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {session.selected_mood_name && (
+                            <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: CARD_BG, color: I3d, border: `1px solid ${CARD_BORDER}` }}>
+                              🎨 {session.selected_mood_name}
+                            </span>
+                          )}
+                          <span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: CARD_BG, color: I3d, border: `1px solid ${CARD_BORDER}` }}>
+                            {session.brief.tone}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* ── Mode-specific content preview ── */}
+
+                      {/* SINGLE: script body + prompt chips */}
+                      {session.mode === 'single' && (
+                        <div className="flex flex-col gap-3">
+                          {session.script_data?.script && (
+                            <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: '13px 15px' }}>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5" style={{ color: `${ACCENT}99` }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: 10 }}>format_quote</span>
+                                Script
+                              </p>
+                              <p className="text-[12px] italic line-clamp-3" style={{ color: I3c, lineHeight: '1.65' }}>
+                                &ldquo;{session.script_data.script}&rdquo;
+                              </p>
+                              <p className="text-[10px] mt-2" style={{ color: I3d }}>
+                                {session.script_data.primaryLever}
+                              </p>
+                            </div>
+                          )}
+                          {(session.prompts_data?.prompts?.length ?? 0) > 0 && (
+                            <div>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2" style={{ color: I3d }}>Image Prompts</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {session.prompts_data!.prompts.map((p, pi) => (
+                                  <span key={pi} className="text-[11px] px-2.5 py-1 rounded-full flex items-center gap-1" style={{ background: `${ACCENT}10`, color: ACCENT, border: `1px solid ${ACCENT}22` }}>
+                                    <span className="material-symbols-outlined" style={{ fontSize: 11 }}>auto_awesome</span>
+                                    {p.title}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {!session.script_data && !session.prompts_data && (
+                            <p className="text-[11px]" style={{ color: I3d }}>Brief only — no content generated yet</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* STORYLINE: hook + duration/scenes */}
+                      {session.mode === 'storyline' && session.storyline_data && (
+                        <div className="flex flex-col gap-3">
+                          <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: '13px 15px' }}>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5" style={{ color: 'rgba(167,139,250,0.80)' }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 10 }}>bolt</span>
+                              Opening Hook
+                            </p>
+                            <p className="text-[13px] italic line-clamp-2" style={{ color: '#f1f5fb', lineHeight: '1.6', fontWeight: 500 }}>
+                              &ldquo;{session.storyline_data.hook}&rdquo;
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[11px] px-2.5 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(167,139,250,0.08)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.18)' }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 11 }}>timer</span>
+                              {session.storyline_data.totalDuration}s
+                            </span>
+                            <span className="text-[11px] px-2.5 py-1 rounded-full flex items-center gap-1" style={{ background: CARD_BG, color: I3d, border: `1px solid ${CARD_BORDER}` }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 11 }}>movie</span>
+                              {session.storyline_data.scenes?.length || 0} scenes
+                            </span>
+                            <span className="text-[11px]" style={{ color: I3d }}>{session.storyline_data.storylineTitle}</span>
+                          </div>
+                          {session.storyline_data.editingNotes && (
+                            <p className="text-[11px] line-clamp-1" style={{ color: I3d }}>
+                              <span style={{ fontWeight: 600 }}>Edit: </span>{session.storyline_data.editingNotes}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* SHOOT: brief title + caption + hashtags */}
+                      {session.mode === 'shoot' && session.shot_list_data && (
+                        <div className="flex flex-col gap-3">
+                          <div style={{ background: CARD_BG, border: `1px solid ${CARD_BORDER}`, borderRadius: 12, padding: '13px 15px' }}>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1.5" style={{ color: 'rgba(52,211,153,0.80)' }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 10 }}>photo_camera</span>
+                              Shot Brief
+                            </p>
+                            <p className="text-[14px] font-semibold mb-2" style={{ color: '#f1f5fb' }}>
+                              {session.shot_list_data.briefTitle}
+                            </p>
+                            <p className="text-[12px] italic line-clamp-2" style={{ color: I3d, lineHeight: '1.55' }}>
+                              &ldquo;{session.shot_list_data.captionDraft}&rdquo;
+                            </p>
+                          </div>
+                          {(session.shot_list_data.hashtags?.length ?? 0) > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {session.shot_list_data.hashtags.slice(0, 4).map(tag => (
+                                <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(52,211,153,0.08)', color: '#34d399', border: '1px solid rgba(52,211,153,0.20)' }}>
+                                  {tag}
+                                </span>
+                              ))}
+                              {session.shot_list_data.hashtags.length > 4 && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ color: I3d, background: CARD_BG, border: `1px solid ${CARD_BORDER}` }}>
+                                  +{session.shot_list_data.hashtags.length - 4}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {session.shot_list_data.postingNote && (
+                            <p className="text-[11px] flex items-start gap-1.5" style={{ color: I3d, lineHeight: '1.5' }}>
+                              <span className="material-symbols-outlined flex-shrink-0 mt-0.5" style={{ fontSize: 12 }}>schedule</span>
+                              {session.shot_list_data.postingNote}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                    </div>
+
+                    {/* ── Actions ── */}
+                    <div className="flex" style={{ borderTop: `1px solid ${CARD_BORDER}` }}>
+                      <button
+                        onClick={() => loadSession(session)}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 active:scale-95 transition-all"
+                        style={{ background: `${ACCENT}08`, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: ACCENT, borderRight: `1px solid ${CARD_BORDER}` }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>open_in_new</span>
+                        Load Session
+                      </button>
+                      <button
+                        onClick={() => remixSession(session)}
+                        className="flex-1 flex items-center justify-center gap-2 py-3.5 active:scale-95 transition-all"
+                        style={{ background: 'rgba(167,139,250,0.06)', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#a78bfa' }}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>shuffle</span>
+                        Remix Brief
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Footer */}
       <footer className="mt-24 pt-8 border-t flex items-center justify-between" style={{ borderColor: L1 }}>

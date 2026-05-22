@@ -225,7 +225,7 @@ const KPIS = [
 
 function OverviewKPIs() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+    <div className="ceo-kpi-grid">
       {KPIS.map(k => (
         <div key={k.k} style={{ ...G1, padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Header */}
@@ -262,20 +262,20 @@ interface OverviewTabProps { onJump: (tab: TabId) => void; actCount: number; }
 
 export default function OverviewTab({ onJump, actCount }: OverviewTabProps) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridAutoRows: 'minmax(0, auto)', gap: 16 }}>
-      <div style={{ gridColumn: '1 / span 7', gridRow: '1' }}>
+    <div className="ceo-overview-grid">
+      <div className="ov-situation">
         <OverviewSituation onGoFull={() => onJump('situation')} />
       </div>
-      <div style={{ gridColumn: '8 / span 5', gridRow: '1 / span 2' }}>
+      <div className="ov-act">
         <OverviewAct actCount={actCount} onGoFull={() => onJump('act')} />
       </div>
-      <div style={{ gridColumn: '1 / span 4', gridRow: '2' }}>
+      <div className="ov-done">
         <OverviewDone onGoFull={() => onJump('done')} />
       </div>
-      <div style={{ gridColumn: '5 / span 3', gridRow: '2' }}>
+      <div className="ov-context">
         <OverviewContext onGoFull={() => onJump('context')} />
       </div>
-      <div style={{ gridColumn: '1 / span 12', gridRow: '3' }}>
+      <div className="ov-kpis">
         <OverviewKPIs />
       </div>
     </div>
