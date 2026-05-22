@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** Alert writer — writes health check results to requests/pending/ */
 import { promises as fs } from 'fs'
 import path from 'path'

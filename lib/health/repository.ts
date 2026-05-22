@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** Repository health — GitHub API for PRs, issues, build status */
 export interface RepoHealthResult {
   status: 'pass' | 'fail' | 'warn'

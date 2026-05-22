@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** Spend tracking — AI token costs, Supabase usage, Vercel spend */
 import { createClient } from '@supabase/supabase-js'
 

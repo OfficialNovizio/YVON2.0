@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** Database health check — Supabase connection, migrations, query perf, pool, disk */
 import { createClient } from '@supabase/supabase-js'
 

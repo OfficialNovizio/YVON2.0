@@ -47,10 +47,12 @@ export async function POST(req: NextRequest) {
     .eq('id', body.contact_id as string)
     .lt('last_contacted', interactionDate)
     // Also update if last_contacted is null
-  await supabase.rpc('update_last_contacted_if_newer', {
-    p_contact_id: body.contact_id,
-    p_date:       interactionDate,
-  }).then(() => null).catch(() => null) // best-effort — fallback below
+  try {
+    await supabase.rpc('update_last_contacted_if_newer', {
+      p_contact_id: body.contact_id,
+      p_date:       interactionDate,
+    })
+  } catch { /* best-effort — fallback below */ }
 
   // Fallback: always update last_contacted to max(current, new_date)
   const { data: contact } = await supabase

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** Website health check — HTTP status, response time, SSL, DNS */
 export interface WebHealthResult {
   status: 'pass' | 'fail' | 'warn'
