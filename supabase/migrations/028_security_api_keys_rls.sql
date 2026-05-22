@@ -11,6 +11,7 @@ DROP POLICY IF EXISTS "Allow authenticated delete"    ON ai_provider_keys;
 
 -- Single service_role-only policy — all access goes through /api/ai-keys
 -- which masks keys before returning them to the browser.
+DROP POLICY IF EXISTS ai_provider_keys_service_all ON ai_provider_keys;
 CREATE POLICY ai_provider_keys_service_all
   ON ai_provider_keys
   FOR ALL

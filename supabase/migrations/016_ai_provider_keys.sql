@@ -21,18 +21,21 @@ CREATE INDEX IF NOT EXISTS ai_provider_keys_provider_idx ON ai_provider_keys (pr
 ALTER TABLE ai_provider_keys ENABLE ROW LEVEL SECURITY;
 
 -- Allow public to read (for the settings page to display configured providers)
+DROP POLICY IF EXISTS "Allow public read access" ON ai_provider_keys;
 CREATE POLICY "Allow public read access"
   ON ai_provider_keys
   FOR SELECT
   USING (true);
 
 -- Allow authenticated users to insert (for saving provider keys)
+DROP POLICY IF EXISTS "Allow authenticated insert" ON ai_provider_keys;
 CREATE POLICY "Allow authenticated insert"
   ON ai_provider_keys
   FOR INSERT
   WITH CHECK (true);
 
 -- Allow authenticated users to update (for updating provider keys)
+DROP POLICY IF EXISTS "Allow authenticated update" ON ai_provider_keys;
 CREATE POLICY "Allow authenticated update"
   ON ai_provider_keys
   FOR UPDATE
@@ -40,6 +43,7 @@ CREATE POLICY "Allow authenticated update"
   WITH CHECK (true);
 
 -- Allow authenticated users to delete (for removing provider keys)
+DROP POLICY IF EXISTS "Allow authenticated delete" ON ai_provider_keys;
 CREATE POLICY "Allow authenticated delete"
   ON ai_provider_keys
   FOR DELETE

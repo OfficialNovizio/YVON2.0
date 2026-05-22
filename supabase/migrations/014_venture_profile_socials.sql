@@ -39,6 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_venture_socials_venture ON venture_socials(ventur
 
 -- RLS — service role bypasses; all access via server-side lib/db.ts
 ALTER TABLE venture_socials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS venture_socials_service_all ON venture_socials;
 CREATE POLICY venture_socials_service_all ON venture_socials USING (true) WITH CHECK (true);
 
 -- ─── Auto-updated_at trigger for ventures ────────────────────────────────────

@@ -103,6 +103,8 @@ CREATE INDEX IF NOT EXISTS idx_content_pitches_batch
 ALTER TABLE reports              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE intelligence_batches ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS reports_service_all              ON reports;
+DROP POLICY IF EXISTS intelligence_batches_service_all ON intelligence_batches;
 CREATE POLICY reports_service_all              ON reports              FOR ALL TO service_role USING (true) WITH CHECK (true);
 CREATE POLICY intelligence_batches_service_all ON intelligence_batches FOR ALL TO service_role USING (true) WITH CHECK (true);
 
