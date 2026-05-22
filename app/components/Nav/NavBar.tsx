@@ -26,7 +26,8 @@ export function NavBar() {
   const router = useRouter();
   const [activeVenture, setActiveVenture] = useState<string>('novizio');
   const [mobileOpen, setMobileOpen] = useState(false);
-  const drawerRef = useRef<HTMLDivElement>(null);
+  const drawerRef    = useRef<HTMLDivElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setActiveVenture(getActiveVentureSlugClient());
@@ -41,17 +42,21 @@ export function NavBar() {
   // Close drawer when route changes
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
-  // Close drawer on outside click
+  // Close drawer on outside click — exclude the hamburger button so its own
+  // onClick isn't cancelled by this handler firing first
   useEffect(() => {
     if (!mobileOpen) return;
     function onOutside(e: MouseEvent) {
-      if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
-        setMobileOpen(false);
-      }
+      const target = e.target as Node;
+      const inDrawer    = drawerRef.current?.contains(target);
+      const inHamburger = hamburgerRef.current?.contains(target);
+      if (!inDrawer && !inHamburger) setMobileOpen(false);
     }
     document.addEventListener('mousedown', onOutside);
     return () => document.removeEventListener('mousedown', onOutside);
   }, [mobileOpen]);
+
+  function closeDrawer() { setMobileOpen(false); }
 
   async function handleLogout() {
     await Promise.all([
@@ -68,9 +73,9 @@ export function NavBar() {
 
   return (
     <>
-      <nav className="glass-nav px-5 py-2.5 gap-2">
+      <nav className="glass-nav px-3 sm:px-5 py-2 sm:py-2.5 gap-1.5 sm:gap-2">
         {/* Left: Logo + divider + Brand Switcher + Nav links */}
-        <div className="flex items-center gap-5 flex-1 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-5 flex-1 min-w-0">
           <Link
             href="/"
             className="flex items-center gap-2.5 shrink-0 pr-4"
@@ -113,7 +118,7 @@ export function NavBar() {
         </div>
 
         {/* Right: Period toggle, settings, notifications, user, hamburger */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div
             className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer transition-all"
             style={{ background: 'rgba(12,44,82,0.07)', border: '1px solid rgba(12,44,82,0.12)' }}
@@ -158,6 +163,7 @@ export function NavBar() {
 
           {/* Hamburger — mobile only */}
           <button
+            ref={hamburgerRef}
             className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl transition-all"
             style={{ background: mobileOpen ? 'rgba(12,44,82,0.12)' : 'transparent' }}
             onClick={() => setMobileOpen(o => !o)}
@@ -180,15 +186,16 @@ export function NavBar() {
                 key={item.href}
                 href={item.href}
                 className={`mobile-nav-link${isActive ? ' active' : ''}`}
+                onClick={closeDrawer}
               >
                 {item.label}
               </Link>
             );
           })}
           <div style={{ height: 1, background: 'rgba(12,44,82,0.08)', margin: '6px 0' }} />
-          <Link href="/screens/settings" className="mobile-nav-link">Settings</Link>
+          <Link href="/screens/settings" className="mobile-nav-link" onClick={closeDrawer}>Settings</Link>
           <button
-            onClick={handleLogout}
+            onClick={() => { closeDrawer(); handleLogout(); }}
             className="mobile-nav-link w-full text-left"
             style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
           >
