@@ -21,8 +21,10 @@ export default function AnalyticsPortfolioPage() {
   const [period, setPeriod] = useState('8W');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [pipelineMsg, setPipelineMsg] = useState('');
 
-  useEffect(() => {
+  const fetchData = () => {
     if (!ventureSlug) return;
     setLoading(true);
     fetch(`/api/brand-health?venture=${ventureSlug}&period=${period}`)
@@ -30,7 +32,56 @@ export default function AnalyticsPortfolioPage() {
       .then(d => setData(d))
       .catch(() => {})
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ventureSlug, period]);
+
+  function handleDiscoverCompetitors() {
+    if (!ventureSlug) return;
+    setPipelineRunning(true);
+    setPipelineMsg('Finding competitors...');
+    const ventureName = ventureSlug === 'hourbour' ? 'Hourbour' : 'Novizio';
+    const industry = ventureSlug === 'hourbour' ? 'fintech' : 'fashion e-commerce';
+
+    // Default competitors per venture (used when AI is unavailable)
+    const DEFAULTS: Record<string, string[]> = {
+      novizio: ['Zara', 'H&M', 'ASOS', 'Mango', 'Uniqlo'],
+      hourbour: ['Monzo', 'Revolut', 'Starling Bank', 'Wise', 'Chime'],
+    };
+
+    // Try AI suggestions first, fall back to defaults
+    fetch('/api/auto-competitors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brandName: ventureName, industry }),
+    })
+      .then(r => r.json())
+      .then(suggestions => {
+        let names: string[] = suggestions.competitors ?? [];
+        if (names.length === 0) names = DEFAULTS[ventureSlug] ?? ['Zara', 'H&M', 'ASOS', 'Mango', 'Uniqlo'];
+        return names;
+      })
+      .catch(() => DEFAULTS[ventureSlug] ?? ['Zara', 'H&M', 'ASOS', 'Mango', 'Uniqlo'])
+      .then(names => {
+        setPipelineMsg(`Scraping ${names.length} competitors...`);
+        return fetch('/api/competitor-pipeline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ventureSlug, competitors: names.map(n => ({ brandName: n })) }),
+        });
+      })
+      .then(r => r.json())
+      .then(d => {
+        if (d?.error) { setPipelineMsg(`Error: ${d.error}`); setPipelineRunning(false); return; }
+        const count = d?.results?.length ?? 0;
+        setPipelineMsg(`Scraped ${count} competitor${count !== 1 ? 's' : ''}. Refreshing...`);
+        setTimeout(() => { fetchData(); setPipelineRunning(false); setPipelineMsg(''); }, 1500);
+      })
+      .catch(() => { setPipelineRunning(false); setPipelineMsg('Failed. Is APIFY_TOKEN set in Vault?'); });
+  }
 
   const competitors = data?.competitors ?? [];
   const hasData = competitors.length > 0;
@@ -64,22 +115,24 @@ export default function AnalyticsPortfolioPage() {
             <span className="material-symbols-outlined text-[56px]" style={{ color: 'rgba(0,0,0,0.12)' }}>business_center</span>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: 'rgba(0,0,0,0.5)', margin: 0 }}>No Competitors Configured</h2>
             <p className="max-w-md" style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)', lineHeight: 1.6 }}>
-              Add competitors in <strong>Settings → Venture → Market</strong> under the Market Subcategories section.
-              Brand score data will also appear once social accounts are connected and Apify data is fetched.
+              Run the competitor pipeline to discover and track competitors. Social media data is scraped from Instagram, TikTok, LinkedIn, and YouTube via Apify, then scored automatically.
             </p>
-            <p style={{ fontSize: 12, color: 'rgba(0,0,0,0.35)' }}>
-              No fabricated data is shown. Real data appears as it becomes available.
-            </p>
+            {pipelineMsg && (
+              <p className="text-[13px] font-medium" style={{ color: ACCENT }}>{pipelineMsg}</p>
+            )}
             <div className="flex gap-3">
-              <button onClick={() => router.push('/screens/settings/venture')}
-                className="bg-[#0066cc] text-white px-6 py-3 rounded-full text-[13px] font-semibold active:scale-95 transition-all flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px]">settings</span>
-                Go to Settings
+              <button onClick={handleDiscoverCompetitors}
+                disabled={pipelineRunning}
+                className="bg-[#0066cc] text-white px-6 py-3 rounded-full text-[13px] font-semibold active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50">
+                <span className={`material-symbols-outlined text-[16px] ${pipelineRunning ? 'animate-spin' : ''}`}>
+                  {pipelineRunning ? 'progress_activity' : 'travel_explore'}
+                </span>
+                {pipelineRunning ? 'Running Pipeline...' : 'Discover Competitors'}
               </button>
-              <button onClick={() => router.push('/screens/analytics/social-media')}
+              <button onClick={() => router.push('/screens/competitor')}
                 className="px-6 py-3 rounded-full text-[13px] font-semibold active:scale-95"
                 style={{ background: 'rgba(0,0,0,0.06)', color: 'rgba(0,0,0,0.6)' }}>
-                Social Media Page
+                Competitor Dashboard
               </button>
             </div>
           </div>
@@ -88,6 +141,21 @@ export default function AnalyticsPortfolioPage() {
         {/* Data sections — only rendered when real data exists */}
         {hasData && (
           <>
+            {/* Refresh bar */}
+            <div className="flex items-center justify-between">
+              <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: I1d, margin: 0 }}>{data?.competitorCount ?? competitors.length} Competitor{competitors.length !== 1 ? 's' : ''} Tracked</p>
+              <div className="flex items-center gap-3">
+                {pipelineMsg && <p className="text-[12px]" style={{ color: ACCENT }}>{pipelineMsg}</p>}
+                <button onClick={handleDiscoverCompetitors}
+                  disabled={pipelineRunning}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-40"
+                  style={{ background: 'rgba(0,102,204,0.1)', color: ACCENT, border: '1px solid rgba(0,102,204,0.2)' }}>
+                  <span className={`material-symbols-outlined text-[13px] ${pipelineRunning ? 'animate-spin' : ''}`}>refresh</span>
+                  {pipelineRunning ? 'Refreshing...' : 'Discover More'}
+                </button>
+              </div>
+            </div>
+
             {/* KPI Row */}
             <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {[

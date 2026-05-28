@@ -11,7 +11,7 @@
  * Page-load requests always use cache (refresh defaults to false).
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { getSocialMetrics, getSocialPosts } from '@/lib/apify'
+import { getSocialMetrics, getSocialPosts, isApifyConfigured } from '@/lib/apify'
 
 export const runtime = 'nodejs'
 export const maxDuration = 130  // Apify sync runs can take up to 2 min
@@ -84,7 +84,8 @@ export async function POST(req: NextRequest) {
       return { platform: capped[i].platform, handle: capped[i].handle, error: (r.reason as Error).message }
     })
 
-    return NextResponse.json({ results: data })
+    const apifyOk = await isApifyConfigured()
+    return NextResponse.json({ results: data, apifyConfigured: apifyOk })
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error'
     console.error('[social-stats POST]', msg)

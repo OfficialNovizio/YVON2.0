@@ -10,17 +10,19 @@ const CACHE_TTL_HOURS = 24
 
 // Read from Supabase Vault (encrypted at rest, service-role only).
 // Falls back to APIFY_TOKEN env var for backward compatibility.
-let _cachedToken: string | null = null
-async function getToken(): Promise<string> {
-  if (_cachedToken) return _cachedToken
+import { getRequiredSecret } from '@/lib/secrets'
+
+export async function getToken(): Promise<string> {
+  return getRequiredSecret('APIFY_TOKEN')
+}
+
+export async function isApifyConfigured(): Promise<boolean> {
   try {
-    const { data } = await supabase.rpc('get_app_secret', { p_name: 'apify_api_key' })
-    if (data) { _cachedToken = data as string; return _cachedToken }
-  } catch { /* fall through to env */ }
-  const envToken = process.env.APIFY_TOKEN
-  if (!envToken) throw new Error('Apify token not found in vault or env')
-  _cachedToken = envToken
-  return _cachedToken
+    const token = await getToken()
+    return !!token
+  } catch {
+    return false
+  }
 }
 
 // ── Types (new analytics helpers) ─────────────────────────────────────────────
@@ -137,9 +139,9 @@ async function runActorSync(token: string, actorId: string, input: Record<string
 
 // ── Platform scrapers ─────────────────────────────────────────────────────────
 
-type ScraperResult = { metrics: Omit<SocialMetrics, 'platform' | 'handle' | 'fetched_at' | 'from_cache'>; posts: SocialPost[]; raw: unknown }
+export type ScraperResult = { metrics: Omit<SocialMetrics, 'platform' | 'handle' | 'fetched_at' | 'from_cache'>; posts: SocialPost[]; raw: unknown }
 
-async function scrapeInstagramFull(token: string, handle: string): Promise<ScraperResult> {
+export async function scrapeInstagramFull(token: string, handle: string): Promise<ScraperResult> {
   const items = await runActorSync(token, 'apify~instagram-profile-scraper', {
     usernames: [handle.replace('@', '')],
     resultsLimit: MAX_POSTS,
@@ -164,7 +166,7 @@ async function scrapeInstagramFull(token: string, handle: string): Promise<Scrap
   }
 }
 
-async function scrapeTikTokFull(token: string, handle: string): Promise<ScraperResult> {
+export async function scrapeTikTokFull(token: string, handle: string): Promise<ScraperResult> {
   const items = await runActorSync(token, 'clockworks~tiktok-profile-scraper', {
     profiles: [`https://www.tiktok.com/@${handle.replace('@', '')}`],
     resultsPerPage: MAX_POSTS,
@@ -192,7 +194,7 @@ async function scrapeTikTokFull(token: string, handle: string): Promise<ScraperR
   }
 }
 
-async function scrapeLinkedInFull(token: string, handle: string): Promise<ScraperResult> {
+export async function scrapeLinkedInFull(token: string, handle: string): Promise<ScraperResult> {
   const url = handle.startsWith('http') ? handle : `https://www.linkedin.com/company/${handle}/`
   const items = await runActorSync(token, 'curious_coder~linkedin-company-scraper', { companies: [url], maxPosts: MAX_POSTS })
   const p = (items[0] ?? {}) as Record<string, unknown>
@@ -215,7 +217,7 @@ async function scrapeLinkedInFull(token: string, handle: string): Promise<Scrape
   }
 }
 
-async function scrapeYouTubeFull(token: string, handle: string): Promise<ScraperResult> {
+export async function scrapeYouTubeFull(token: string, handle: string): Promise<ScraperResult> {
   const q = handle.startsWith('UC') ? handle : `@${handle.replace(/^@/, '')}`
   const items = await runActorSync(token, 'bernardo_adinolfi~youtube-channel-scraper', {
     startUrls: [{ url: `https://www.youtube.com/${q}` }],
@@ -271,9 +273,32 @@ export async function getSocialMetrics(
         from_cache:      true,
       }
     }
+    // No cache and no explicit refresh — return empty metrics rather than
+    // burning Apify credits on passive page loads.
+    return {
+      platform, handle,
+      followers: 0, following: 0, posts_count: 0,
+      avg_likes: 0, avg_comments: 0, avg_views: 0,
+      engagement_rate: 0,
+      fetched_at: new Date().toISOString(),
+      from_cache: false,
+    }
   }
 
-  const token = await getToken()
+  let token: string
+  try {
+    token = await getToken()
+  } catch {
+    return {
+      platform, handle,
+      followers: 0, following: 0, posts_count: 0,
+      avg_likes: 0, avg_comments: 0, avg_views: 0,
+      engagement_rate: 0,
+      fetched_at: new Date().toISOString(),
+      from_cache: false,
+    }
+  }
+
   let result: ScraperResult
 
   switch (platform) {

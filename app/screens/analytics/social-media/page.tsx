@@ -246,6 +246,7 @@ export default function SocialMediaPage() {
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [socialData, setSocialData] = useState<Record<string, any>>({});
   const [loadingData, setLoadingData] = useState(true);
+  const [apifyConfigured, setApifyConfigured] = useState(true);
 
   // ─── Fetch connected social accounts (inline) ───────────────────────────
   const [accounts, setAccounts] = useState<any[]>([]);
@@ -295,6 +296,7 @@ export default function SocialMediaPage() {
             if (!r.error) map[r.platform] = r;
           });
           setSocialData(map);
+          setApifyConfigured(data.apifyConfigured ?? true);
         }
       })
       .catch(() => {})
@@ -320,6 +322,7 @@ export default function SocialMediaPage() {
           const map: Record<string, any> = {};
           data.results.forEach((r: any) => { if (!r.error) map[r.platform] = r; });
           setSocialData(map);
+          setApifyConfigured(data.apifyConfigured ?? true);
         }
       })
       .catch(() => {})
@@ -390,13 +393,29 @@ export default function SocialMediaPage() {
 
       <div className="px-6 max-w-[1200px] 2xl:max-w-[min(92vw,1700px)] mx-auto mt-[18px] flex flex-col gap-12">
 
+        {/* ── Apify not configured warning ──────────────────────────────── */}
+        {!apifyConfigured && (
+          <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.25)' }}>
+            <span className="material-symbols-outlined text-[20px] shrink-0 mt-0.5" style={{ color: ORANGE }}>warning</span>
+            <div>
+              <p className="text-[13px] font-semibold" style={{ color: ORANGE }}>Live data fetching not configured</p>
+              <p className="text-[12px] mt-0.5" style={{ color: 'rgba(0,0,0,0.55)' }}>
+                <code className="text-[11px] px-1 py-0.5 rounded" style={{ background: 'rgba(0,0,0,0.06)' }}>APIFY_TOKEN</code> is not set in Supabase Vault. Go to{' '}
+                <span className="font-medium">Settings → Secrets</span> to add it, or get a free token at{' '}
+                <a href="https://console.apify.com" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: ACCENT }}>console.apify.com</a>.
+                Charts below show cached data only.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ── SECTION 1: Platform Health Matrix ─────────────────────────── */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-[18px] font-semibold" style={{ letterSpacing: '-0.28px', color: '#000000' }}>Platform Health Matrix</h2>
               <p className="text-[12px] mt-0.5" style={{ color: 'rgba(0,0,0,0.55)' }}>
-                {accounts.length} connected · last fetched {loadingData ? '…' : 'now'}
+                {accounts.length} connected · {apifyConfigured ? (loadingData ? 'fetching…' : 'cache + live') : 'cache only'}
               </p>
             </div>
             <div className="flex items-center gap-3">
