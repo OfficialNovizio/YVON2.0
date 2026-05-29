@@ -20,7 +20,7 @@ export const maxDuration = 180
 // Fallbacks keyed by "slug:country" first, then "slug", then default
 const FALLBACK: Record<string, { benchmark: string[]; stretch: string[]; anchor: string }> = {
   'novizio:IN':  { benchmark: ['Bunaai', 'Suta', 'Label Ritu Kumar'], stretch: ['Libas', 'Global Desi'], anchor: 'FabIndia' },
-  novizio:       { benchmark: ['Rouje', 'By Far', 'Rhode'], stretch: ['Reformation', 'Staud'], anchor: 'Zara' },
+  novizio:       { benchmark: ['Elaluz', 'Mate the Label', 'Lisa Says Gah'], stretch: ['Staud', 'Reformation'], anchor: 'Zara' },
   'hourbour:IN': { benchmark: ['Fi Money', 'Jupiter', 'Slice'], stretch: ['Groww', 'Zerodha'], anchor: 'Paytm' },
   hourbour:      { benchmark: ['Lili', 'Klar', 'Suits App'], stretch: ['N26', 'Starling Bank'], anchor: 'Revolut' },
 }
@@ -130,7 +130,8 @@ Rules:
 - "stretch": exactly 2 brands with ${fmtBand(band.max)}–${fmtBand(band.stretchMax)} followers — visible horizon to study strategy. Same ${countryName} market.
 - "anchor": exactly 1 well-known brand with 1M+ followers — directional reference only, not a direct competitor
 - All brands must be real, active, and in the same niche as "${ventureName}"
-- Prioritise brands with strong ${countryName} audience — avoid US-only brands if market is not United States`,
+- Prioritise brands with strong ${countryName} audience — avoid US-only brands if market is not United States
+- CRITICAL: Do NOT return brands you know have 500K+ followers as "benchmark". Pick genuinely small, niche brands. If unsure about exact follower counts, err on the side of smaller, lesser-known brands.`,
       }],
       maxTokens: 256,
     })

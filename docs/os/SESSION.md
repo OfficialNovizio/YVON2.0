@@ -7,23 +7,23 @@
 ---
 
 ## Active Right Now
-- **Status:** OS Gate Enforcement + Venture Infrastructure — COMPLETE ✅
+- **Status:** Competitor Sub-tabs Real Data + State Caching — COMPLETE ✅
 - **Completed this session:**
-  - Triple-pass-protocol SKILL.md rewritten (v2.0) — BLOCKING GATE, ≥3 critique items, Critique check line
-  - MANDATORY OS GATES section added to all 14 agent SKILLS.md files
-  - WORKFLOW.md updated — Critique check line added to ENGAGE+PLAN format
-  - Deprecated brand refs removed from 5 agents (Kai, Lena, Rio, Nate, Atlas)
-  - yvon-dashboard/BRAND.md expanded from 20 lines to full product identity
-  - ISSUES.md created for all 3 ventures (yvon-dashboard, novizio, hourbour)
-  - METRICS.md created for all 3 ventures with KPI targets + baselines
-  - AGENTS.md created for all 3 ventures with routing notes
-  - INDEX.md updated — ISSUES.md, METRICS.md, AGENTS.md added to load manifest
+  - `_positioning-map.tsx` rewritten: bubble chart → animated horizontal BarChart (Recharts), metric switcher (ER/Followers/Posts/Score), tier color-coded bars, no-filter-needed
+  - `competitor/page.tsx`: card header updated "Market Map" → "Competitor Ranking"
+  - `content-intel/page.tsx` full rewrite: removed all UK fintech hardcoded demo data; real API data from `/api/competitor-content-intel`; platform filtering via `venture_socials` (only show connected platforms); session cache via `getCached`/`setCache`
+  - `content-gaps/page.tsx` full rewrite: real gap data from `/api/competitor-gaps`; ER delta vs benchmark; session cache
+  - `keywords/page.tsx` full rewrite: real hashtags from `/api/competitor-keywords`; hashtag cloud; session cache
+  - `alerts/page.tsx` full rewrite: real signals as alert cards + viral post alerts; dismiss; session cache
+  - `reports/page.tsx` full rewrite: real market position table + top posts + signals summary; session cache
+  - Build verified: `npm run build` — 165 pages, 0 TypeScript errors ✅
 - **Still pending (roadmap):**
   - Competitor pipeline: test end-to-end with real Apify token (from previous session)
   - WebSearch not wired in /api/claude (YVN-001 — highest urgency feature gap)
   - Supabase RLS on multi-venture tables (YVN-002), Upstash rate limiting (YVN-004), Inbox approval UI (YVN-005)
   - Fill in Novizio + Hourbour ICP fields (NOV-001, HRB-007)
   - Hourbour trial-to-paid conversion flow (HRB-001)
+  - Connect daily brief to real competitor data (inject into Kai analysis)
 
 ---
 
@@ -38,14 +38,14 @@
 
 | Date | Agent(s) | Task | Outcome | Next Step |
 |------|---------|------|---------|-----------|
-| 2026-05-28 | Diana, Marcus | Assess operational processes, workflows, and execution ; Provide executive synthesis and strategic recommendatio | 4 agent calls via War Room | Review CEO dashboard |
-| 2026-05-28 | Diana, Marcus | Assess operational processes, workflows, and execution ; Provide executive synthesis and strategic recommendatio | 4 agent calls via War Room | Review CEO dashboard |
-| 2026-05-28 | Diana, Marcus | Assess operational processes, workflows, and execution ; Provide executive synthesis and strategic recommendatio | 4 agent calls via War Room | Review CEO dashboard |
-| 2026-05-28 | Diana, Marcus | Assess operational processes, workflows, and execution ; Provide executive synthesis and strategic recommendatio | 4 agent calls via War Room | Review CEO dashboard |
-| 2026-05-28 | Marcus (all 14 agents) | OS gate enforcement + venture infrastructure | Triple-pass blocking gate; MANDATORY OS GATES in 14 SKILLS.md; 9 new venture files (ISSUES×3, METRICS×3, AGENTS×3); brand refs cleaned; INDEX.md updated | Wire WebSearch into /api/claude (YVN-001); fill ICP fields; trial-to-paid flow |
+| 2026-05-28 | Diana, Marcus | Assess operational processes, workflows, and execution ; Provide executive synthesis and strategic recommendatio | 6 agent calls via War Room | Review CEO dashboard |
+| 2026-05-28 | Diana, Marcus | Assess operational processes, workflows, and execution ; Provide executive synthesis and strategic recommendatio | 6 agent calls via War Room | Review CEO dashboard |
+| 2026-05-28 | Diana, Marcus | Assess operational processes, workflows, and execution ; Provide executive synthesis and strategic recommendatio | 6 agent calls via War Room | Review CEO dashboard |
+| 2026-05-28 | Mia, Dev | Competitor sub-tabs: replace demo data with real API data; add session cache; filter platforms to connected only | 5 pages rewritten, build clean ✅ | Test with real Apify data; wire daily brief to competitor intel |
+| 2026-05-28 | Mia, Dev | Competitor positioning map: scatter chart → animated horizontal BarChart with metric switcher | `_positioning-map.tsx` rewritten, build clean ✅ | — |
 ---
 
-## Last Clean Exit: 2026-05-28 11:21
+## Last Clean Exit: 2026-05-28 23:32
 
 ## SIP Flags (Pending Distillation)
 - No pending SIP flags

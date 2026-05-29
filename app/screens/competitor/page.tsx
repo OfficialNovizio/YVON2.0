@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import CompetitorSubNav from './_subnav';
+import PositioningMap, { type CompetitorPoint } from './_positioning-map';
+import CompetitorRow from './_competitor-row';
 import { useVentureSlug } from '@/lib/use-venture-slug';
+import { getCached, setCache, clearCache } from '@/lib/session-cache';
 
 // ── Glass variants ──────────────────────────────────────────────────────────────
 const G1 = { background: 'rgba(255,255,255,0.32)', backdropFilter: 'blur(32px) saturate(160%)', WebkitBackdropFilter: 'blur(32px) saturate(160%)', border: '1px solid rgba(255,255,255,0.55)', borderRadius: 22, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.70),inset 0 -1px 0 rgba(255,255,255,0.10),0 18px 50px -10px rgba(20,60,120,0.28)' };
@@ -25,39 +28,17 @@ const ANCHOR_BORDER = 'rgba(251,191,36,0.25)';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────────
 
-function fmtNum(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
-  return String(n);
-}
-
-// Stage → competitor band used for auto-discovery
-const STAGE_BANDS: Record<string, { min: number; max: number }> = {
-  seed:   { min: 50_000,  max: 200_000 },
-  early:  { min: 100_000, max: 500_000 },
-  growth: { min: 300_000, max: 2_000_000 },
-  scale:  { min: 1_000_000, max: 10_000_000 },
-};
-
-// Fallback tier defaults if AI auto-competitors fails
-const TIER_DEFAULTS: Record<string, { benchmark: string[]; stretch: string[]; anchor: string }> = {
-  novizio: { benchmark: ['Rouje', 'By Far', 'Rhode'], stretch: ['Reformation', 'Staud'], anchor: 'Zara' },
-  hourbour: { benchmark: ['Lili', 'Klar', 'Suits App'], stretch: ['N26', 'Starling Bank'], anchor: 'Revolut' },
-};
-
 // ── Types ────────────────────────────────────────────────────────────────────────
-
-interface GapCard {
-  competitorName: string;
-  totalFollowers: number;
-  followerGap: number;
-  engagementRate: number | null;
-}
 
 interface AnchorData {
   name: string;
   initial: string;
   followersFormatted: string;
+}
+
+interface QuadrantPoint {
+  name: string; initial: string; followers: number; engagementRate: number;
+  contentVelocity: number; tier: 'benchmark' | 'stretch' | 'anchor'; isTrending: boolean;
 }
 
 interface IntelData {
@@ -69,7 +50,7 @@ interface IntelData {
     tier: 'benchmark' | 'stretch';
   }>;
   anchor: AnchorData | null;
-  gapCards: GapCard[];
+  quadrantData: QuadrantPoint[];
 }
 
 // ── Page ────────────────────────────────────────────────────────────────────────
@@ -78,116 +59,93 @@ export default function CompetitorPage() {
   const ventureSlug = useVentureSlug();
   const [data, setData] = useState<IntelData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [pipelineRunning, setPipelineRunning] = useState(false);
-  const [pipelineMsg, setPipelineMsg] = useState('');
-  const [confirmReset, setConfirmReset] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshMsg, setRefreshMsg] = useState('');
+  const [trendingReels, setTrendingReels] = useState<Array<{
+    id: string; url: string; caption: string; views: number; engagement: number;
+    trendScore: number; brandName: string; instagramHandle: string;
+  }>>([]);
+  const [filteredQuadrant, setFilteredQuadrant] = useState<CompetitorPoint[] | null>(null);
 
-  useEffect(() => {
+  function loadData() {
     if (!ventureSlug) return;
+    const intelKey = `competitor-intel-${ventureSlug}`;
+    const trendingKey = `competitor-trending-${ventureSlug}`;
+
+    // Check cache first — instant display if cached
+    const cachedIntel = getCached<IntelData>(intelKey);
+    const cachedTrending = getCached<Array<any>>(trendingKey);
+    if (cachedIntel) { setData(cachedIntel); setLoading(false); }
+    if (cachedTrending) setTrendingReels(cachedTrending);
+    if (cachedIntel && cachedTrending) return; // fully cached, no fetch needed
+
     setLoading(true);
     fetch(`/api/competitor-intelligence?venture=${ventureSlug}`)
       .then(r => r.json())
-      .then(d => setData(d as IntelData))
+      .then(d => { setData(d as IntelData); setCache(intelKey, d); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [ventureSlug]);
 
-  function handleReset() {
-    if (!ventureSlug || pipelineRunning) return;
-    setConfirmReset(false);
-    setPipelineRunning(true);
-    setPipelineMsg('Clearing old data…');
-
-    fetch('/api/reset-competitors', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ventureSlug }),
-    })
+    fetch(`/api/competitor-trending?venture=${ventureSlug}`)
       .then(r => r.json())
-      .then(d => {
-        if ((d as any)?.error) { setPipelineMsg(`Error: ${(d as any).error}`); setPipelineRunning(false); return; }
-        const count = (d as any)?.results?.length ?? 0;
-        setPipelineMsg(`Reset done. ${count} fresh competitor${count !== 1 ? 's' : ''} scraped. Refreshing…`);
-        setTimeout(() => {
-          fetch(`/api/competitor-intelligence?venture=${ventureSlug}`)
-            .then(r => r.json())
-            .then(d => setData(d as IntelData))
-            .catch(() => {})
-            .finally(() => { setPipelineRunning(false); setPipelineMsg(''); });
-        }, 1500);
-      })
-      .catch(() => { setPipelineRunning(false); setPipelineMsg('Reset failed. Check server logs.'); });
+      .then((d: any) => { setTrendingReels(d.trendingReels ?? []); setCache(trendingKey, d.trendingReels ?? []); })
+      .catch(() => {});
   }
 
-  function handleDiscover() {
-    if (!ventureSlug || pipelineRunning) return;
-    setPipelineRunning(true);
-    setPipelineMsg('Finding size-matched competitors…');
+  function clearSessionAndReload() {
+    if (!ventureSlug) return;
+    clearCache(`competitor-intel-${ventureSlug}`);
+    clearCache(`competitor-trending-${ventureSlug}`);
+    loadData();
+  }
 
-    const ventureName = ventureSlug === 'hourbour' ? 'Hourbour' : 'Novizio';
-    const industry    = ventureSlug === 'hourbour' ? 'fintech' : 'fashion e-commerce';
-    const fallback    = TIER_DEFAULTS[ventureSlug] ?? TIER_DEFAULTS.novizio;
+  useEffect(() => { loadData() }, [ventureSlug]);
 
-    fetch('/api/auto-competitors', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brandName: ventureName, industry, ventureSlug }),
-    })
-      .then(r => r.json())
-      .then(suggestions => {
-        const benchmark: string[] = (suggestions as any).benchmark?.length
-          ? (suggestions as any).benchmark
-          : fallback.benchmark;
-        const stretch: string[]   = (suggestions as any).stretch?.length
-          ? (suggestions as any).stretch
-          : fallback.stretch;
-        const anchor: string      = (suggestions as any).anchor || fallback.anchor;
+  async function handleRefreshAll() {
+    if (!ventureSlug || refreshing) return;
+    setRefreshing(true);
+    setRefreshMsg('Re-scraping all competitors…');
 
-        const competitors = [
-          ...benchmark.map((n: string) => ({ brandName: n, tier: 'benchmark' })),
-          ...stretch.map((n: string)   => ({ brandName: n, tier: 'stretch' })),
-          { brandName: anchor, tier: 'anchor' },
-        ];
-        return competitors;
-      })
-      .catch(() => [
-        ...fallback.benchmark.map(n => ({ brandName: n, tier: 'benchmark' })),
-        ...fallback.stretch.map(n   => ({ brandName: n, tier: 'stretch' })),
-        { brandName: fallback.anchor, tier: 'anchor' },
-      ])
-      .then(competitors => {
-        setPipelineMsg(`Scraping ${competitors.length} competitors…`);
-        return fetch('/api/competitor-pipeline', {
+    try {
+      // Get all manual competitors
+      const listRes = await fetch(`/api/manual-competitor?venture=${ventureSlug}`);
+      const listData = await listRes.json() as { competitors?: Array<{ brand_name: string; instagram_handle: string | null }> };
+      const competitors = (listData.competitors ?? []).filter(c => c.instagram_handle);
+
+      if (competitors.length === 0) {
+        setRefreshMsg('No competitors with Instagram handles to refresh.');
+        setTimeout(() => setRefreshMsg(''), 4000);
+        setRefreshing(false);
+        return;
+      }
+
+      setRefreshMsg(`Refreshing ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''}…`);
+
+      for (const c of competitors) {
+        await fetch('/api/manual-competitor', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ventureSlug, competitors }),
+          body: JSON.stringify({ ventureSlug, brandName: c.brand_name, instagramHandle: c.instagram_handle }),
         });
-      })
-      .then(r => r.json())
-      .then(d => {
-        if ((d as any)?.error) {
-          setPipelineMsg(`Error: ${(d as any).error}`);
-          setPipelineRunning(false);
-          return;
-        }
-        const count = (d as any)?.results?.length ?? 0;
-        setPipelineMsg(`Done! ${count} competitor${count !== 1 ? 's' : ''} scraped. Refreshing…`);
-        setTimeout(() => {
-          fetch(`/api/competitor-intelligence?venture=${ventureSlug}`)
-            .then(r => r.json())
-            .then(d => setData(d as IntelData))
-            .catch(() => {})
-            .finally(() => { setPipelineRunning(false); setPipelineMsg(''); });
-        }, 1500);
-      })
-      .catch(() => { setPipelineRunning(false); setPipelineMsg('Failed. Check APIFY_TOKEN in Vault.'); });
+      }
+
+      setRefreshMsg(`Done! ${competitors.length} competitor${competitors.length !== 1 ? 's' : ''} refreshed.`);
+      setTimeout(() => {
+        clearSessionAndReload();
+        setRefreshing(false);
+        setRefreshMsg('');
+      }, 1500);
+    } catch {
+      setRefreshing(false);
+      setRefreshMsg('Refresh failed. Check APIFY_TOKEN.');
+      setTimeout(() => setRefreshMsg(''), 4000);
+    }
   }
 
   const signals     = data?.signals ?? [];
   const kpis        = data?.kpis ?? [];
   const competitors = data?.competitors ?? [];
   const anchor      = data?.anchor ?? null;
-  const gapCards    = data?.gapCards ?? [];
   const hasData     = competitors.length > 0 || anchor !== null;
   const isEmpty     = !loading && !hasData;
 
@@ -201,22 +159,9 @@ export default function CompetitorPage() {
             <span className="material-symbols-outlined text-[48px]" style={{ color: 'rgba(0,0,0,0.12)' }}>radar</span>
             <h2 className="text-[22px] font-semibold" style={{ color: 'rgba(0,0,0,0.5)' }}>No Competitors Tracked</h2>
             <p className="text-[14px] max-w-md" style={{ color: 'rgba(0,0,0,0.4)', lineHeight: 1.6 }}>
-              Run discovery to find size-matched competitors — brands in the 50k–200k follower range
-              that are realistically achievable benchmarks, not market giants.
+              Go to <strong>Settings → Competitors</strong> and add competitor Instagram handles.
+              YVON will scrape their profiles and show stats here.
             </p>
-            {pipelineMsg && (
-              <p className="text-[13px] font-medium" style={{ color: ACCENT }}>{pipelineMsg}</p>
-            )}
-            <button
-              onClick={handleDiscover}
-              disabled={pipelineRunning}
-              className="bg-[#0066cc] text-white px-6 py-3 rounded-full text-[13px] font-semibold active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
-            >
-              <span className={`material-symbols-outlined text-[16px] ${pipelineRunning ? 'animate-spin' : ''}`}>
-                {pipelineRunning ? 'progress_activity' : 'travel_explore'}
-              </span>
-              {pipelineRunning ? 'Running Pipeline…' : 'Discover Competitors'}
-            </button>
           </div>
         </div>
       </main>
@@ -261,53 +206,20 @@ export default function CompetitorPage() {
               Market Intelligence
             </p>
             <p style={{ fontSize: 11, color: INK_4, margin: '3px 0 0', opacity: 0.65 }}>
-              Benchmarks: 50k–200k · Stretch: 200k–600k · Anchor: reference only
+              Add competitors in Settings → Competitors tab
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {pipelineMsg && <p className="text-[12px]" style={{ color: ACCENT }}>{pipelineMsg}</p>}
-
-            {/* Reset & Rediscover — clears DB first */}
-            {confirmReset ? (
-              <div className="flex items-center gap-2">
-                <span className="text-[11px]" style={{ color: 'rgba(239,68,68,0.8)' }}>Wipe all data?</span>
-                <button
-                  onClick={handleReset}
-                  disabled={pipelineRunning}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-40"
-                  style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}
-                >
-                  <span className="material-symbols-outlined text-[13px]">warning</span>
-                  Confirm Reset
-                </button>
-                <button
-                  onClick={() => setConfirmReset(false)}
-                  className="text-[10px] font-bold uppercase tracking-wider px-2 py-1.5"
-                  style={{ color: I1d }}
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setConfirmReset(true)}
-                disabled={pipelineRunning}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-40"
-                style={{ background: 'rgba(239,68,68,0.07)', color: 'rgba(239,68,68,0.7)', border: '1px solid rgba(239,68,68,0.18)' }}
-              >
-                <span className="material-symbols-outlined text-[13px]">delete_sweep</span>
-                Reset & Rediscover
-              </button>
-            )}
+            {refreshMsg && <p className="text-[12px]" style={{ color: ACCENT }}>{refreshMsg}</p>}
 
             <button
-              onClick={handleDiscover}
-              disabled={pipelineRunning}
+              onClick={handleRefreshAll}
+              disabled={refreshing}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-40"
               style={{ background: 'rgba(0,102,204,0.1)', color: ACCENT, border: '1px solid rgba(0,102,204,0.2)' }}
             >
-              <span className={`material-symbols-outlined text-[13px] ${pipelineRunning ? 'animate-spin' : ''}`}>refresh</span>
-              {pipelineRunning ? 'Refreshing…' : 'Discover More'}
+              <span className={`material-symbols-outlined text-[13px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+              {refreshing ? 'Refreshing…' : 'Refresh Stats'}
             </button>
           </div>
         </div>
@@ -341,233 +253,152 @@ export default function CompetitorPage() {
         {/* ── 3. Competitor Matrix + Market Map ──────────────────── */}
         <section className="grid grid-cols-12 gap-6">
 
-          {/* Competitor Matrix */}
-          <div className="col-span-7" style={{ ...G1, overflow: 'hidden' }}>
-            <div className="px-6 pt-6 pb-4 flex items-center justify-between">
-              <div>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: I1d, margin: '0 0 4px' }}>Intelligence</p>
-                <h2 style={{ fontSize: 15, fontWeight: 700, color: I1, letterSpacing: '-0.02em', margin: 0 }}>Top Competitors</h2>
-              </div>
-            </div>
-            <table className="w-full text-left">
-              <thead>
-                <tr style={{ borderTop: `1px solid ${L1}` }}>
-                  {['Brand', 'Share of Voice', 'Sentiment', 'Momentum'].map((h, i) => (
-                    <th key={h} className={`px-5 py-3${i === 3 ? ' text-right' : ''}`}
-                      style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', color: I1d }}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {competitors.map(c => {
-                  const sentColor = c.sentUp === true ? '#059669' : c.sentUp === false ? '#f87171' : I1c;
-                  const momColor  = c.sentUp === true ? '#059669' : c.sentUp === false ? '#f87171' : I1d;
-                  const isBench   = c.tier === 'benchmark';
-                  return (
-                    <tr key={c.name} style={{ borderTop: `1px solid ${L1}` }} className="hover:bg-black/[0.03] transition-colors">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                            style={{
-                              background: c.dashed ? 'transparent' : c.accent ? ACCENT : L1,
-                              border: c.dashed ? `1.5px dashed ${I1d}` : 'none',
-                              color: c.accent ? '#fff' : I1,
-                            }}>
-                            {c.initial}
-                          </div>
-                          <div>
-                            <span style={{ fontSize: 13, fontWeight: c.dashed ? 500 : 600, color: c.dashed ? I1d : I1 }}>
-                              {c.name}
-                            </span>
-                            {!isBench && (
-                              <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '1px 5px', borderRadius: 6, background: 'rgba(0,102,204,0.08)', color: I1d, border: `1px solid ${L1}` }}>
-                                Stretch
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4"
-                        style={{ fontFamily: 'ui-monospace, "Geist Mono", monospace', fontSize: 13, color: I1c }}>
-                        {c.sov}
-                      </td>
-                      <td className="px-5 py-4" style={{ fontSize: 12, fontWeight: 700, color: sentColor }}>
-                        {c.sentiment}
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <span className="material-symbols-outlined" style={{ fontSize: 18, color: momColor }}>
-                          {c.momentum}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-
-                {/* ── Anchor row ── */}
-                {anchor && (
-                  <>
-                    <tr>
-                      <td colSpan={4} style={{ padding: '6px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ flex: 1, height: 1, background: ANCHOR_BORDER }} />
-                          <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: ANCHOR_COLOR, padding: '2px 8px', borderRadius: 10, border: `1px solid ${ANCHOR_BORDER}`, background: ANCHOR_BG }}>
-                            Aspirational Reference
-                          </span>
-                          <div style={{ flex: 1, height: 1, background: ANCHOR_BORDER }} />
-                        </div>
-                      </td>
-                    </tr>
-                    <tr style={{ borderTop: `1px solid ${ANCHOR_BORDER}` }} className="hover:bg-amber-50/20 transition-colors">
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                            style={{ background: ANCHOR_BG, border: `1px solid ${ANCHOR_BORDER}`, color: ANCHOR_COLOR }}>
-                            {anchor.initial}
-                          </div>
-                          <div>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: I1c }}>{anchor.name}</span>
-                            <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '1px 5px', borderRadius: 6, background: ANCHOR_BG, color: ANCHOR_COLOR, border: `1px solid ${ANCHOR_BORDER}` }}>
-                              Anchor
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4" style={{ fontFamily: 'ui-monospace, "Geist Mono", monospace', fontSize: 13, color: ANCHOR_COLOR }}>
-                        {anchor.followersFormatted}
-                      </td>
-                      <td className="px-5 py-4" style={{ fontSize: 12, fontWeight: 600, color: I1d }}>Direction</td>
-                      <td className="px-5 py-4 text-right">
-                        <span className="material-symbols-outlined" style={{ fontSize: 18, color: ANCHOR_COLOR }}>star</span>
-                      </td>
-                    </tr>
-                  </>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Market Positioning Bubble Chart */}
-          <div className="col-span-5 flex flex-col" style={{ ...G2, padding: 24 }}>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: I2d, margin: '0 0 4px' }}>Positioning</p>
-                <h2 style={{ fontSize: 15, fontWeight: 700, color: I2, letterSpacing: '-0.02em', margin: 0 }}>Market Map</h2>
+          {/* Competitor Intelligence — Clean Card Layout */}
+          <div className="col-span-5" style={{ ...G1, overflow: 'hidden', padding: 0 }}>
+            <div style={{ padding: '14px 18px 10px', borderBottom: `1px solid ${L1}` }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: I1d, margin: '0 0 4px' }}>Intelligence</p>
+                  <h2 style={{ fontSize: 15, fontWeight: 700, color: I1, letterSpacing: '-0.02em', margin: 0 }}>Top Competitors</h2>
+                </div>
+                <span style={{ fontSize: 10, color: I1d, fontWeight: 500 }}>
+                  {competitors.length} tracked
+                </span>
               </div>
             </div>
 
-            <div className="relative flex-grow rounded-xl overflow-hidden"
-              style={{
-                minHeight: 260,
-                background: 'rgba(0,0,0,0.15)',
-                border: '1px solid rgba(255,255,255,0.10)',
-                backgroundImage: 'linear-gradient(to right,rgba(255,255,255,0.04) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,0.04) 1px,transparent 1px)',
-                backgroundSize: '40px 40px',
-              }}>
-              <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] uppercase tracking-widest" style={{ color: I2d }}>
-                Brand Reach →
-              </span>
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-[9px] uppercase tracking-widest" style={{ color: I2d, transformOrigin: 'left center' }}>
-                Engagement →
-              </span>
-
-              {/* Benchmark + stretch bubbles */}
+            <div style={{ padding: '2px 10px' }}>
               {competitors.map((c, i) => {
-                const positions = [
-                  { top: '18%', left: '30%', w: 'w-14', h: 'h-14', size: 'text-xs' },
-                  { top: '42%', left: '22%', w: 'w-12', h: 'h-12', size: 'text-[10px]' },
-                  { top: '62%', left: '35%', w: 'w-12', h: 'h-12', size: 'text-[10px]' },
-                  { top: '10%', left: '52%', w: 'w-16', h: 'h-16', size: 'text-xs' },
-                  { top: '38%', left: '58%', w: 'w-14', h: 'h-14', size: 'text-[10px]' },
-                ];
-                const pos = positions[i] ?? positions[positions.length - 1];
-                const bubbleStyle = c.accent
-                  ? { background: ACCENT, border: '1px solid rgba(255,255,255,0.30)', color: '#fff', boxShadow: '0 4px 24px rgba(0,102,204,0.45)' }
-                  : c.dashed
-                  ? { background: 'transparent', border: '1.5px dashed rgba(244,248,255,0.40)', color: I2d }
-                  : { background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.18)', color: I2d };
+                const qd = data?.quadrantData?.find(q => q.name === c.name)
+                const followers = qd?.followers ?? 0
+                const er = qd?.engagementRate ?? 0
+                const velocity = qd?.contentVelocity ?? 0
+                const score = qd ? Math.round(
+                  Math.min(er * 1000, 40) + Math.min(velocity * 4, 20) +
+                  Math.min(Math.log10(Math.max(followers, 1)) * 2, 10) + 10
+                ) : 0
 
                 return (
-                  <div key={c.name}
-                    className={`absolute ${pos.w} ${pos.h} rounded-full flex items-center justify-center font-bold cursor-pointer hover:scale-110 transition-transform ${pos.size}`}
-                    style={{ top: pos.top, left: pos.left, backdropFilter: 'blur(8px)', ...bubbleStyle }}>
-                    {c.initial}
-                  </div>
-                );
+                  <CompetitorRow
+                    key={c.name}
+                    rank={i + 1}
+                    name={c.name}
+                    tier={c.tier}
+                    followers={followers}
+                    engagementRate={er}
+                    contentVelocity={velocity}
+                    score={score}
+                    sentimentUp={c.sentUp}
+                  />
+                )
               })}
+            </div>
 
-              {/* Anchor bubble — top right, larger, gold */}
-              {anchor && (
-                <div
-                  className="absolute w-20 h-20 rounded-full flex items-center justify-center font-bold cursor-pointer hover:scale-110 transition-transform text-xs"
-                  style={{ top: '6%', left: '68%', backdropFilter: 'blur(8px)', background: ANCHOR_BG, border: `1.5px dashed ${ANCHOR_BORDER}`, color: ANCHOR_COLOR, boxShadow: `0 4px 24px rgba(251,191,36,0.15)` }}
-                  title={`${anchor.name} — ${anchor.followersFormatted} followers (reference only)`}
-                >
-                  {anchor.initial}
+            {/* Anchor row */}
+            {anchor && (
+              <div style={{ borderTop: `1px solid ${ANCHOR_BORDER}`, padding: '8px 18px', background: 'rgba(251,191,36,0.03)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 14, color: ANCHOR_COLOR, flexShrink: 0 }}>star</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: I1c }}>{anchor.name}</span>
+                  <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', padding: '0px 5px', borderRadius: 4, background: ANCHOR_BG, color: ANCHOR_COLOR, border: `1px solid ${ANCHOR_BORDER}` }}>Anchor</span>
+                  <span style={{ fontSize: 12, color: ANCHOR_COLOR, fontWeight: 600, marginLeft: 'auto' }}>{anchor.followersFormatted}</span>
+                  <span style={{ fontSize: 9, color: I1d }}>Reference only</span>
                 </div>
-              )}
+              </div>
+            )}
+          </div>
+
+          {/* Market Positioning — White Glass Card */}
+          <div className="col-span-7 flex flex-col" style={{ ...G1, padding: 0, overflow: 'hidden' }}>
+            {/* Header + Filters */}
+            <div style={{ padding: '14px 18px 10px' }}>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: I1d, margin: '0 0 4px' }}>Performance</p>
+                  <h2 style={{ fontSize: 15, fontWeight: 700, color: I1, letterSpacing: '-0.02em', margin: 0 }}>Competitor Ranking</h2>
+                </div>
+              </div>
+
+              <FilterBar
+                data={data?.quadrantData ?? []}
+                onFilteredChange={(filtered) => setFilteredQuadrant(filtered)}
+              />
+            </div>
+
+            {/* Map */}
+            <div style={{ padding: '0 12px 12px' }}>
+              <PositioningMap
+                data={filteredQuadrant ?? data?.quadrantData ?? []}
+                style={{ width: '100%', height: 460 }}
+              />
             </div>
           </div>
         </section>
 
-        {/* ── 4. Gap Cards ─────────────────────────────────────── */}
-        {gapCards.length > 0 && (
+        {/* ── 4. Trending Reels ──────────────────────────────────── */}
+        {trendingReels.length > 0 && (
           <section>
             <div style={{ marginBottom: 12 }}>
               <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: INK_4, margin: '0 0 3px' }}>
-                Gap Analysis
+                Trending Reels
               </p>
               <p style={{ fontSize: 11, color: INK_4, margin: 0, opacity: 0.65 }}>
-                What you need to close to match each benchmark competitor.
+                Competitor reels with engagement 2x+ above their account average. Sorted by viral potential.
               </p>
             </div>
-            <div className={`grid gap-4 ${gapCards.length === 1 ? 'grid-cols-1 max-w-sm' : gapCards.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
-              {gapCards.map(gc => (
-                <div key={gc.competitorName} style={{ ...G1, padding: 22 }}>
 
-                  {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 700 }}>
-                      {gc.competitorName.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: I1, margin: 0 }}>{gc.competitorName}</p>
-                      <p style={{ fontSize: 10, color: I1d, margin: 0 }}>Benchmark competitor</p>
-                    </div>
+            <div className="grid grid-cols-4 gap-4">
+              {trendingReels.slice(0, 8).map((reel, i) => (
+                <a
+                  key={reel.id}
+                  href={reel.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ ...G1, padding: 16, textDecoration: 'none', display: 'block', transition: 'transform 0.15s', cursor: 'pointer' }}
+                  onMouseEnter={e => { (e.currentTarget.style.transform = 'translateY(-2px)') }}
+                  onMouseLeave={e => { (e.currentTarget.style.transform = 'none') }}
+                >
+                  {/* Rank badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <span style={{
+                      width: 20, height: 20, borderRadius: '50%',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 10, fontWeight: 800,
+                      background: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : 'rgba(0,0,0,0.06)',
+                      color: i <= 1 ? '#000' : I1d,
+                    }}>{i + 1}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: ACCENT }}>
+                      {reel.trendScore.toFixed(1)}x avg
+                    </span>
                   </div>
 
-                  {/* Target pill */}
-                  <div style={{ marginBottom: 14, padding: '8px 12px', borderRadius: 10, background: 'rgba(0,102,204,0.06)', border: '1px solid rgba(0,102,204,0.12)' }}>
-                    <p style={{ fontSize: 10, color: I1d, margin: '0 0 2px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Target</p>
-                    <p style={{ fontFamily: 'ui-monospace, "Geist Mono", monospace', fontSize: 22, fontWeight: 700, color: ACCENT, margin: 0, letterSpacing: '-0.02em' }}>
-                      {gc.totalFollowers === 0 ? 'No data yet' : fmtNum(gc.totalFollowers)}
-                    </p>
-                    <p style={{ fontSize: 10, color: I1d, margin: '2px 0 0' }}>total followers</p>
-                  </div>
+                  {/* Brand */}
+                  <p style={{ fontSize: 11, fontWeight: 600, color: I1, margin: '0 0 4px' }}>
+                    {reel.brandName}
+                    <span style={{ fontSize: 10, fontWeight: 400, color: I1d, marginLeft: 4, fontFamily: 'monospace' }}>
+                      @{reel.instagramHandle}
+                    </span>
+                  </p>
 
-                  {/* Gap rows */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: `1px solid ${L1}` }}>
-                      <span style={{ fontSize: 11, color: I1d }}>Follower gap</span>
-                      <span style={{ fontFamily: 'ui-monospace, "Geist Mono", monospace', fontSize: 14, fontWeight: 700, color: I1 }}>
-                        {gc.followerGap === 0 ? '—' : `+${fmtNum(gc.followerGap)}`}
-                      </span>
-                    </div>
-                    {gc.engagementRate !== null && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: `1px solid ${L1}` }}>
-                        <span style={{ fontSize: 11, color: I1d }}>Their avg ER</span>
-                        <span style={{ fontFamily: 'ui-monospace, "Geist Mono", monospace', fontSize: 14, fontWeight: 700, color: '#059669' }}>
-                          {gc.engagementRate.toFixed(1)}%
-                        </span>
-                      </div>
-                    )}
-                    <p style={{ fontSize: 10, color: I1d, margin: 0, lineHeight: 1.5 }}>
-                      Connect your social accounts to see time-to-close estimate.
-                    </p>
-                  </div>
+                  {/* Caption */}
+                  <p style={{
+                    fontSize: 11, color: I1c, lineHeight: 1.4, margin: '0 0 8px',
+                    overflow: 'hidden', display: '-webkit-box',
+                    WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+                  }}>
+                    {reel.caption || 'No caption'}
+                  </p>
 
-                </div>
+                  {/* Stats */}
+                  <div style={{ display: 'flex', gap: 12, fontSize: 10, color: I1d }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 12 }}>visibility</span>
+                    {reel.views >= 1_000_000 ? (reel.views / 1_000_000).toFixed(1) + 'M'
+                      : reel.views >= 1_000 ? Math.round(reel.views / 1_000) + 'K'
+                      : String(reel.views)} views
+                    <span className="material-symbols-outlined" style={{ fontSize: 12, marginLeft: 4 }}>favorite</span>
+                    {reel.engagement.toLocaleString()}
+                  </div>
+                </a>
               ))}
             </div>
           </section>
@@ -586,4 +417,104 @@ export default function CompetitorPage() {
       </div>
     </main>
   );
+}
+
+// ─── Filter Bar for Positioning Map ──────────────────────────────────────────
+
+function FilterBar({ data, onFilteredChange }: {
+  data: CompetitorPoint[]
+  onFilteredChange: (filtered: CompetitorPoint[]) => void
+}) {
+  const [tier, setTier] = useState<string>('all')
+  const [er, setER] = useState<string>('all')
+  const [size, setSize] = useState<string>('all')
+
+  useEffect(() => {
+    let filtered = [...data]
+    if (tier !== 'all') filtered = filtered.filter(d => d.tier === tier)
+    if (er === 'high') filtered = filtered.filter(d => d.engagementRate >= 0.01)
+    else if (er === 'medium') filtered = filtered.filter(d => d.engagementRate >= 0.003 && d.engagementRate < 0.01)
+    else if (er === 'low') filtered = filtered.filter(d => d.engagementRate < 0.003)
+    if (size === 'small') filtered = filtered.filter(d => d.followers < 200_000)
+    else if (size === 'medium') filtered = filtered.filter(d => d.followers >= 200_000 && d.followers < 1_000_000)
+    else if (size === 'large') filtered = filtered.filter(d => d.followers >= 1_000_000)
+    onFilteredChange(filtered)
+  }, [tier, er, size, data])
+
+  const btnStyle = (active: boolean): React.CSSProperties => ({
+    padding: '5px 13px',
+    borderRadius: 20,
+    border: '1px solid',
+    cursor: 'pointer',
+    fontSize: 10,
+    fontWeight: 600,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    transition: 'all 0.15s',
+    background: active ? 'rgba(0,102,204,0.10)' : 'transparent',
+    color: active ? '#0066cc' : 'rgba(12,44,82,0.48)',
+    borderColor: active ? 'rgba(0,102,204,0.30)' : 'rgba(12,44,82,0.12)',
+  })
+
+  const groupLabel: React.CSSProperties = {
+    fontSize: 8, fontWeight: 700, letterSpacing: '0.10em',
+    textTransform: 'uppercase', color: 'rgba(12,44,82,0.35)',
+    marginRight: 6,
+  }
+
+  return (
+    <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+      {/* Tier */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={groupLabel}>Tier</span>
+        {['all', 'benchmark', 'stretch', 'anchor'].map(v => (
+          <button key={v} onClick={() => setTier(v)} style={btnStyle(tier === v)}>
+            {v === 'all' ? 'All' : v === 'benchmark' ? 'Benchmark' : v === 'stretch' ? 'Stretch' : 'Anchor'}
+          </button>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <span style={{ width: 1, height: 14, background: 'rgba(12,44,82,0.10)', flexShrink: 0 }} />
+
+      {/* Engagement */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={groupLabel}>Engagement</span>
+        {[
+          { v: 'all', l: 'All' },
+          { v: 'high', l: 'High (1%+)' },
+          { v: 'medium', l: 'Med (0.3–1%)' },
+          { v: 'low', l: 'Low (<0.3%)' },
+        ].map(o => (
+          <button key={o.v} onClick={() => setER(o.v)} style={btnStyle(er === o.v)}>{o.l}</button>
+        ))}
+      </div>
+
+      {/* Divider */}
+      <span style={{ width: 1, height: 14, background: 'rgba(12,44,82,0.10)', flexShrink: 0 }} />
+
+      {/* Size */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={groupLabel}>Size</span>
+        {[
+          { v: 'all', l: 'All' },
+          { v: 'small', l: '<200K' },
+          { v: 'medium', l: '200K–1M' },
+          { v: 'large', l: '1M+' },
+        ].map(o => (
+          <button key={o.v} onClick={() => setSize(o.v)} style={btnStyle(size === o.v)}>{o.l}</button>
+        ))}
+      </div>
+
+      {/* Active filter count badge */}
+      {[tier, er, size].filter(v => v !== 'all').length > 0 && (
+        <span style={{
+          fontSize: 9, fontWeight: 600, color: '#0066cc',
+          background: 'rgba(0,102,204,0.08)', borderRadius: 10,
+          padding: '2px 10px', border: '1px solid rgba(0,102,204,0.18)',
+        }}>
+          {[tier, er, size].filter(v => v !== 'all').length} filter{[tier, er, size].filter(v => v !== 'all').length > 1 ? 's' : ''} active
+        </span>
+      )}
+    </div>
+  )
 }

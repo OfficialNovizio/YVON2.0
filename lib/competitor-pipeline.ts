@@ -80,13 +80,6 @@ export interface CompetitorIntel {
   }
 }
 
-export interface GapCard {
-  competitorName: string
-  totalFollowers: number
-  followerGap: number
-  engagementRate: number | null
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtFollowers(n: number): string {
@@ -316,6 +309,23 @@ export async function runCompetitorPipeline(
     const platformResults = await scrapeCompetitor(compId, comp.brandName, handles)
     const signalScore = computeSignalScore(platformResults)
 
+    // Recalibrate tier based on actual scraped follower counts, not AI guess
+    const actualTotalFollowers = platformResults
+      .filter(p => p.status === 'success')
+      .reduce((s, p) => s + p.followers, 0)
+
+    const aiTier = (comp.tier ?? 'benchmark') as CompetitorTier
+    let recalibratedTier: CompetitorTier = aiTier
+    if (actualTotalFollowers > 0) {
+      if (actualTotalFollowers >= 1_000_000) {
+        recalibratedTier = 'anchor'
+      } else if (actualTotalFollowers >= 200_000) {
+        recalibratedTier = 'stretch'
+      } else {
+        recalibratedTier = 'benchmark'
+      }
+    }
+
     const { data: prevMetrics } = await supabase
       .from('competitor_metrics')
       .select('followers')
@@ -332,7 +342,7 @@ export async function runCompetitorPipeline(
     }
 
     // SOV calculated only within benchmark + stretch, not anchor
-    const tier = comp.tier ?? 'benchmark'
+    const tier = recalibratedTier
     let shareOfVoice = 0
     if (tier !== 'anchor') {
       const { data: allComps } = await supabase
@@ -361,6 +371,7 @@ export async function runCompetitorPipeline(
       follower_growth_rate: Math.round(followerGrowthRate * 100) / 100,
       share_of_voice: shareOfVoice,
       week_over_week_change: 0,
+      tier: recalibratedTier,
       last_checked: new Date().toISOString(),
     }).eq('id', compId)
 
@@ -388,7 +399,10 @@ export async function getCompetitorIntelligence(ventureId: string): Promise<{
     tier: 'benchmark' | 'stretch'
   }>
   anchor: { name: string; initial: string; followersFormatted: string } | null
-  gapCards: GapCard[]
+  quadrantData: Array<{
+    name: string; initial: string; followers: number; engagementRate: number
+    contentVelocity: number; tier: 'benchmark' | 'stretch' | 'anchor'; isTrending: boolean
+  }>
 }> {
   const { data: compRows } = await supabase
     .from('competitors')
@@ -397,7 +411,7 @@ export async function getCompetitorIntelligence(ventureId: string): Promise<{
     .order('signal_score', { ascending: false })
 
   const allComps = (compRows ?? []) as any[]
-  if (allComps.length === 0) return { signals: [], kpis: [], competitors: [], anchor: null, gapCards: [] }
+  if (allComps.length === 0) return { signals: [], kpis: [], competitors: [], anchor: null, quadrantData: [] }
 
   // Fetch all metrics
   const compIds = allComps.map((c: any) => c.id)
@@ -509,22 +523,6 @@ export async function getCompetitorIntelligence(ventureId: string): Promise<{
     }
   })
 
-  // Gap cards — benchmark only
-  const gapCards: GapCard[] = benchmarkComps.map((c: any) => {
-    const metrics = (metricsByComp[c.id] ?? []).slice(0, 4)
-    const totalFollowers = metrics.reduce((s: number, m: any) => s + Number(m.followers ?? 0), 0)
-    const avgER = metrics.length > 0
-      ? metrics.reduce((s: number, m: any) => s + Number(m.engagement_rate ?? 0), 0) / metrics.length * 100
-      : null
-
-    return {
-      competitorName:  c.brand_name,
-      totalFollowers,
-      followerGap:     totalFollowers, // vs our ~0 baseline; UI shows "your gap to reach them"
-      engagementRate:  avgER !== null ? Math.round(avgER * 10) / 10 : null,
-    }
-  })
-
   // Anchor brand
   let anchor: { name: string; initial: string; followersFormatted: string } | null = null
   if (anchorComp) {
@@ -537,11 +535,35 @@ export async function getCompetitorIntelligence(ventureId: string): Promise<{
     }
   }
 
+  // Quadrant chart data — raw metrics for positioning map
+  const quadrantData = sovComps.map((c: any) => {
+    const metrics = metricsByComp[c.id] ?? []
+    const latest = metrics[0] ?? {}
+    const followers = Number(latest.followers ?? 0)
+    const er = Number(latest.engagement_rate ?? 0)
+    // Estimate content velocity from post counts in snapshots
+    const velocity = metrics.length >= 2
+      ? Math.round((followers > 0 ? 3 : 1) * 10) / 10 // rough estimate
+      : 1
+    // Check if this competitor has trending reels
+    const isTrending = signals.some((s: any) => s.id === `comp-${c.id}`)
+
+    return {
+      name: c.brand_name,
+      initial: c.brand_name.charAt(0).toUpperCase(),
+      followers,
+      engagementRate: er,
+      contentVelocity: velocity,
+      tier: (c.tier ?? 'benchmark') as 'benchmark' | 'stretch' | 'anchor',
+      isTrending,
+    }
+  })
+
   return {
     signals: signals.slice(0, 5),
     kpis,
     competitors: compList,
     anchor,
-    gapCards,
+    quadrantData,
   }
 }

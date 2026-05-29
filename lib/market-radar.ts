@@ -171,7 +171,9 @@ export async function upsertCompetitorMetrics(
   }>
 ): Promise<void> {
   if (metrics.length === 0) return
-  await supabase.from('competitor_metrics').upsert(
+  // Time-series table — INSERT new rows on each scrape, never upsert.
+  // Growth calculations read the most recent rows by recorded_at DESC.
+  await supabase.from('competitor_metrics').insert(
     metrics.map((m) => ({
       competitor_id: competitorId,
       platform: m.platform,
@@ -181,7 +183,6 @@ export async function upsertCompetitorMetrics(
       estimated_monthly_traffic: m.estimatedMonthlyTraffic ?? 0,
       recorded_at: new Date().toISOString(),
     })),
-    { onConflict: 'competitor_id,platform' }
   )
 }
 

@@ -1812,60 +1812,143 @@ function ContentDNATab({ ventureId }: { ventureId: string }) {
 interface CustomCompetitorRow {
   id: string
   brand_name: string
+  instagram_handle: string | null
   tier: string
   signal_score: number
+  ig_followers?: number
+  ig_engagement_rate?: number
   last_checked: string | null
   is_custom: boolean
 }
 
 function CompetitorsTab({ ventureSlug }: { ventureSlug: string }) {
-  const [brands,     setBrands]     = useState<CustomCompetitorRow[]>([])
-  const [newBrand,   setNewBrand]   = useState('')
-  const [adding,     setAdding]     = useState(false)
-  const [addMsg,     setAddMsg]     = useState('')
-  const [addErr,     setAddErr]     = useState('')
-  const [loading,    setLoading]    = useState(true)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [brands,       setBrands]       = useState<CustomCompetitorRow[]>([])
+  const [newBrand,     setNewBrand]     = useState('')
+  const [newHandle,    setNewHandle]    = useState('')
+  const [adding,       setAdding]       = useState(false)
+  const [addMsg,       setAddMsg]       = useState('')
+  const [addErr,       setAddErr]       = useState('')
+  const [loading,      setLoading]      = useState(true)
+  const [deletingId,   setDeletingId]   = useState<string | null>(null)
+  const [refreshingId, setRefreshingId] = useState<string | null>(null)
+  const [bulkInput,     setBulkInput]     = useState('')
+  const [bulkRunning,   setBulkRunning]   = useState(false)
+  const [bulkMsg,       setBulkMsg]       = useState('')
+  const [bulkResult,    setBulkResult]    = useState<{
+    top5: Array<{ rank: number; brandName: string; instagramHandle: string; followers: number; engagementRate: number; compositeScore: number; trendingReelsCount: number }>
+    allResults: Array<{ rank: number; brandName: string; compositeScore: number; followers: number; engagementRate: number; error?: string }>
+  } | null>(null)
+  const [refreshFreq,   setRefreshFreq]   = useState('twice_weekly')
+  const [refreshStatus, setRefreshStatus] = useState<{ ageHours: number; staleness: string; activePlatforms: string[]; estimatedCostCU: number; apifyCUUsedThisMonth: number } | null>(null)
+  const [refreshRunning, setRefreshRunning] = useState(false)
 
-  useEffect(() => {
+  function load() {
     setLoading(true)
-    void fetch(`/api/custom-competitor?venture=${ventureSlug}`)
+    void fetch(`/api/manual-competitor?venture=${ventureSlug}`)
       .then(r => r.json())
       .then((d: { competitors?: CustomCompetitorRow[] }) => {
         setBrands(d.competitors ?? [])
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [ventureSlug])
+  }
+
+  useEffect(() => { load(); loadSettings() }, [ventureSlug])
+
+  function loadSettings() {
+    fetch(`/api/competitor-settings?venture=${ventureSlug}`)
+      .then(r => r.json())
+      .then(d => { setRefreshFreq(d.refresh_frequency ?? 'twice_weekly') })
+      .catch(() => {})
+    fetch(`/api/competitor-refresh?venture=${ventureSlug}`)
+      .then(r => r.json())
+      .then(d => setRefreshStatus(d))
+      .catch(() => {})
+  }
+
+  async function handleRefreshAll() {
+    setRefreshRunning(true)
+    try {
+      const res = await fetch('/api/competitor-refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ventureSlug, forceAll: true }),
+      })
+      const data = await res.json()
+      if (data.refreshed !== undefined) {
+        loadSettings()
+        load()
+      }
+    } catch { /* ok */ }
+    finally { setRefreshRunning(false) }
+  }
+
+  async function handleFrequencyChange(freq: string) {
+    setRefreshFreq(freq)
+    await fetch('/api/competitor-settings', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ventureSlug, refresh_frequency: freq }),
+    })
+    loadSettings()
+  }
 
   async function handleAdd() {
     const name = newBrand.trim()
-    if (!name || adding) return
-    setAdding(true); setAddErr(''); setAddMsg('Scraping brand data — this takes ~20s…')
+    const handle = newHandle.trim()
+    if (!name || !handle || adding) return
+    setAdding(true); setAddErr(''); setAddMsg('Scraping Instagram profile — this takes ~15s…')
     try {
-      const res  = await fetch('/api/custom-competitor', {
+      const res = await fetch('/api/manual-competitor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ventureSlug, brandName: name }),
+        body: JSON.stringify({ ventureSlug, brandName: name, instagramHandle: handle }),
       })
-      const data = await res.json() as { competitor?: CustomCompetitorRow; error?: string }
+      const data = await res.json() as { competitor?: CustomCompetitorRow; error?: string; scrape_error?: string }
       if (!res.ok || data.error) { setAddErr(data.error ?? 'Failed to add brand'); setAddMsg(''); return }
-      if (data.competitor) setBrands(prev => [...prev.filter(b => b.brand_name !== name), data.competitor!])
-      setNewBrand('')
-      setAddMsg(`${name} added and scraped.`)
-      setTimeout(() => setAddMsg(''), 4000)
+      if (data.competitor) {
+        setBrands(prev => [...prev.filter(b => b.brand_name !== name), data.competitor!])
+      }
+      setNewBrand(''); setNewHandle('')
+      const f = data.competitor?.ig_followers
+      setAddMsg(`${name} added — ${f ? f.toLocaleString() + ' followers' : 'scraped'}.`)
+      setTimeout(() => setAddMsg(''), 5000)
     } catch (e) {
       setAddErr(e instanceof Error ? e.message : 'Network error')
       setAddMsg('')
     } finally { setAdding(false) }
   }
 
+  async function handleRefresh(brand: CustomCompetitorRow) {
+    if (!brand.instagram_handle) return
+    setRefreshingId(brand.id)
+    try {
+      const res = await fetch('/api/manual-competitor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ventureSlug, brandName: brand.brand_name, instagramHandle: brand.instagram_handle }),
+      })
+      const data = await res.json() as { competitor?: CustomCompetitorRow; error?: string }
+      if (data.competitor) {
+        setBrands(prev => prev.map(b => b.id === brand.id ? data.competitor! : b))
+      }
+    } catch { /* ok */ }
+    finally { setRefreshingId(null) }
+  }
+
   async function handleDelete(id: string) {
     setDeletingId(id)
     try {
-      await fetch(`/api/custom-competitor?venture=${ventureSlug}&id=${id}`, { method: 'DELETE' })
+      await fetch(`/api/manual-competitor?venture=${ventureSlug}&id=${id}`, { method: 'DELETE' })
       setBrands(prev => prev.filter(b => b.id !== id))
     } finally { setDeletingId(null) }
+  }
+
+  function fmtFollowers(n: number | undefined): string {
+    if (!n || n === 0) return '—'
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
+    if (n >= 1_000) return Math.round(n / 1_000) + 'K'
+    return String(n)
   }
 
   return (
@@ -1875,37 +1958,128 @@ function CompetitorsTab({ ventureSlug }: { ventureSlug: string }) {
       <div style={{ ...G2, padding: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
           <span className="material-symbols-outlined" style={{ fontSize: 20, color: I2 }}>radar</span>
-          <p style={{ fontSize: 13, fontWeight: 700, color: I2, margin: 0 }}>Custom Competitor Tracking</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: I2, margin: 0 }}>Manual Competitor Tracking</p>
         </div>
         <p style={{ fontSize: 12, color: 'rgba(244,248,255,0.60)', lineHeight: 1.6, margin: 0 }}>
-          Add any specific brand to track alongside auto-discovered peers. YVON scrapes their
-          social accounts via Apify and adds them directly to the Competitor dashboard.
-          Auto-discovered brands are managed from the Competitor screen.
+          Add competitors by their Instagram handle. YVON scrapes their profile via Apify
+          and displays follower counts, engagement rates, and scores on the Competitor dashboard.
+          Add as many as you want — each one is tracked independently.
         </p>
       </div>
 
-      {/* Add brand form */}
+      {/* Data Refresh Settings */}
       <div style={{ ...G1, padding: 20 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: I1, margin: '0 0 4px' }}>Track a Specific Brand</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: I1, margin: '0 0 4px' }}>Data Refresh Settings</p>
         <p style={{ fontSize: 11, color: I1d, margin: '0 0 14px', lineHeight: 1.5 }}>
-          Enter any brand name. YVON resolves their social handles, scrapes follower counts
-          and engagement, then adds them to your Competitor dashboard.
+          Controls how often competitor data is refreshed. Scrapes only happen on the schedule — the dashboard always reads from the database (zero latency).
+          Only platforms where this venture has connected social accounts are scraped.
         </p>
 
-        <div style={{ display: 'flex', gap: 8 }}>
-          <FInput
-            value={newBrand}
-            onChange={e => { setNewBrand(e.target.value); setAddErr('') }}
-            placeholder="e.g. Rouje, Mango, The Label"
-          />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          {/* Frequency selector */}
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: I1d, display: 'block', marginBottom: 6 }}>
+              Refresh Frequency
+            </label>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {[
+                { value: 'manual', label: 'Manual Only' },
+                { value: 'daily', label: 'Daily' },
+                { value: 'twice_weekly', label: '2× Week' },
+                { value: 'weekly', label: 'Weekly' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleFrequencyChange(opt.value)}
+                  style={{
+                    padding: '6px 14px', borderRadius: 10, border: '1px solid',
+                    cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                    fontFamily: T.font, transition: 'all 0.12s',
+                    background: refreshFreq === opt.value ? 'rgba(0,102,204,0.12)' : 'transparent',
+                    color: refreshFreq === opt.value ? ACCENT : I1c,
+                    borderColor: refreshFreq === opt.value ? 'rgba(0,102,204,0.35)' : L1,
+                  }}
+                >{opt.label}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Status + Refresh button */}
+          <div>
+            <label style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: I1d, display: 'block', marginBottom: 6 }}>
+              Status
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: I1c }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: !refreshStatus ? I1d : refreshStatus.staleness === 'fresh' ? '#34d399' : refreshStatus.staleness === 'aging' ? '#fbbf24' : '#ef4444',
+                }} />
+                {refreshStatus
+                  ? `Last refreshed: ${refreshStatus.ageHours}h ago (${refreshStatus.staleness})`
+                  : 'No refresh data yet'
+                }
+              </div>
+              {refreshStatus && (
+                <div style={{ fontSize: 10, color: I1d }}>
+                  Platforms: {refreshStatus.activePlatforms.length > 0 ? refreshStatus.activePlatforms.join(', ') : 'none (add social accounts first)'}
+                  {' · '}Est. cost: ~{refreshStatus.estimatedCostCU} CU · Used: {refreshStatus.apifyCUUsedThisMonth}/100 CU
+                </div>
+              )}
+              <button
+                onClick={handleRefreshAll}
+                disabled={refreshRunning}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
+                  padding: '7px 14px', borderRadius: 8,
+                  background: refreshRunning ? 'rgba(0,102,204,0.05)' : 'rgba(0,102,204,0.12)',
+                  border: `1px solid ${refreshRunning ? L1 : 'rgba(0,102,204,0.35)'}`,
+                  color: refreshRunning ? I1d : ACCENT, cursor: refreshRunning ? 'default' : 'pointer',
+                  fontFamily: T.font, fontSize: 11, fontWeight: 600,
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 14, animation: refreshRunning ? 'spin 1s linear infinite' : 'none' }}>
+                  {refreshRunning ? 'progress_activity' : 'refresh'}
+                </span>
+                {refreshRunning ? 'Refreshing…' : 'Refresh Now'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add competitor form */}
+      <div style={{ ...G1, padding: 20 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: I1, margin: '0 0 4px' }}>Add a Competitor</p>
+        <p style={{ fontSize: 11, color: I1d, margin: '0 0 14px', lineHeight: 1.5 }}>
+          Enter the brand name and their exact Instagram handle. We'll scrape their profile
+          immediately and add them to your Competitor dashboard.
+        </p>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <FInput
+              value={newBrand}
+              onChange={e => { setNewBrand(e.target.value); setAddErr('') }}
+              placeholder="Brand name e.g. Suta"
+            />
+          </div>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <FInput
+              value={newHandle}
+              onChange={e => { setNewHandle(e.target.value); setAddErr('') }}
+              placeholder="Instagram handle e.g. suta"
+              mono
+            />
+          </div>
           <Btn
             small
-            disabled={!newBrand.trim() || adding}
+            disabled={!newBrand.trim() || !newHandle.trim() || adding}
             onClick={() => { void handleAdd() }}
           >
             {adding
-              ? <><span className="material-symbols-outlined" style={{ fontSize: 14, marginRight: 4, animation: 'spin 1s linear infinite' }}>progress_activity</span>Tracking…</>
-              : <><span className="material-symbols-outlined" style={{ fontSize: 14, marginRight: 4 }}>add_circle</span>Track Brand</>
+              ? <><span className="material-symbols-outlined" style={{ fontSize: 14, marginRight: 4, animation: 'spin 1s linear infinite' }}>progress_activity</span>Scraping…</>
+              : <><span className="material-symbols-outlined" style={{ fontSize: 14, marginRight: 4 }}>add_circle</span>Track Competitor</>
             }
           </Btn>
         </div>
@@ -1924,10 +2098,139 @@ function CompetitorsTab({ ventureSlug }: { ventureSlug: string }) {
         )}
       </div>
 
-      {/* Custom brands list */}
+      {/* Bulk Analyze & Rank */}
+      <div style={{ ...G2, padding: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 20, color: I2 }}>leaderboard</span>
+          <p style={{ fontSize: 13, fontWeight: 700, color: I2, margin: 0 }}>Bulk Analyze & Rank</p>
+        </div>
+        <p style={{ fontSize: 12, color: 'rgba(244,248,255,0.60)', lineHeight: 1.6, margin: '0 0 14px' }}>
+          Paste up to 10 competitors (one per line) as <code style={{ fontFamily: 'monospace', fontSize: 11 }}>Brand Name = @handle</code>.
+          We'll scrape all profiles, rank them by engagement + growth, and pick the top 5.
+          Trending reels from each competitor are also detected.
+        </p>
+
+        <textarea
+          value={bulkInput}
+          onChange={e => { setBulkInput(e.target.value); setBulkResult(null) }}
+          placeholder={`Suta = suta\nBunaai = bunaai\nLibas = libasindia\nLabel Ritu Kumar = labelritukumar\nFabIndia = fabindiaofficial\nGlobal Desi = globaldesi\n...`}
+          rows={6}
+          spellCheck={false}
+          style={{
+            width: '100%', boxSizing: 'border-box',
+            background: 'rgba(255,255,255,0.42)',
+            border: '1px solid rgba(255,255,255,0.55)',
+            borderRadius: 12, padding: '12px 14px',
+            fontFamily: 'ui-monospace, SF Mono, Monaco, monospace',
+            fontSize: 12, lineHeight: 1.7, color: I1,
+            outline: 'none', resize: 'vertical',
+          }}
+        />
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
+          <button
+            onClick={async () => {
+              const lines = bulkInput.trim().split('\n').filter(l => l.trim())
+              const parsed = lines.map(line => {
+                const parts = line.split('=').map(s => s.trim())
+                return { brandName: parts[0] || '', instagramHandle: (parts[1] || '').replace('@', '') }
+              }).filter(c => c.brandName && c.instagramHandle)
+
+              if (parsed.length === 0) { setBulkMsg('No valid entries found. Use format: Brand Name = @handle'); return }
+              if (parsed.length > 10) { setBulkMsg('Max 10 competitors at once.'); return }
+
+              setBulkRunning(true); setBulkMsg(`Analyzing ${parsed.length} competitors — this takes ~30s…`); setBulkResult(null)
+              try {
+                const res = await fetch('/api/competitor-bulk', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ ventureSlug, competitors: parsed }),
+                })
+                const data = await res.json()
+                if (data.error) { setBulkMsg('Error: ' + data.error); return }
+                setBulkResult(data)
+                setBulkMsg(`Done! Top ${data.top5.length} ranked. ${data.trendingReels?.length || 0} trending reels found.`)
+                setTimeout(() => load(), 2000) // refresh the tracked list
+              } catch (e) {
+                setBulkMsg('Network error. Try again.')
+              } finally { setBulkRunning(false) }
+            }}
+            disabled={bulkRunning || !bulkInput.trim()}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '8px 16px', borderRadius: 10,
+              background: bulkRunning ? 'rgba(255,255,255,0.1)' : 'rgba(0,102,204,0.15)',
+              border: `1px solid ${bulkRunning ? 'rgba(255,255,255,0.2)' : 'rgba(0,102,204,0.35)'}`,
+              color: bulkRunning ? 'rgba(244,248,255,0.48)' : ACCENT, cursor: bulkRunning ? 'default' : 'pointer',
+              fontFamily: T.font, fontSize: 12, fontWeight: 600,
+              opacity: bulkRunning ? 0.7 : 1,
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 15, animation: bulkRunning ? 'spin 1s linear infinite' : 'none' }}>
+              {bulkRunning ? 'progress_activity' : 'analytics'}
+            </span>
+            {bulkRunning ? 'Analyzing…' : 'Bulk Analyze & Rank'}
+          </button>
+          {bulkMsg && <span style={{ fontSize: 11, color: bulkMsg.includes('Error') ? '#ff453a' : '#34d399' }}>{bulkMsg}</span>}
+        </div>
+
+        {/* Bulk results */}
+        {bulkResult && (
+          <div style={{ marginTop: 16, borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: 14 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: I2, margin: '0 0 10px' }}>
+              Top 5 Ranking
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {bulkResult.top5.map((r, i) => (
+                <div key={r.brandName} style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '8px 12px', borderRadius: 10,
+                  background: i === 0 ? 'rgba(251,191,36,0.12)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${i === 0 ? 'rgba(251,191,36,0.25)' : 'rgba(255,255,255,0.08)'}`,
+                }}>
+                  <span style={{
+                    width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 800,
+                    background: i === 0 ? '#fbbf24' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7f32' : 'rgba(255,255,255,0.1)',
+                    color: i <= 2 ? '#000' : 'rgba(244,248,255,0.48)',
+                  }}>{r.rank}</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: I2 }}>{r.brandName}</span>
+                    <span style={{ fontSize: 10, color: 'rgba(244,248,255,0.48)', marginLeft: 8, fontFamily: 'monospace' }}>@{r.instagramHandle}</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: 'rgba(244,248,255,0.48)' }}>{r.followers.toLocaleString()} followers</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: '#34d399' }}>{(r.engagementRate * 100).toFixed(2)}% ER</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: ACCENT }}>{r.compositeScore}/100</span>
+                </div>
+              ))}
+            </div>
+
+            {/* All results summary */}
+            {bulkResult.allResults.length > 5 && (
+              <div style={{ marginTop: 10 }}>
+                <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(244,248,255,0.48)', margin: '0 0 6px' }}>All {bulkResult.allResults.length} competitors:</p>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {bulkResult.allResults.map(r => (
+                    <span key={r.brandName} style={{
+                      fontSize: 10, padding: '3px 8px', borderRadius: 10,
+                      background: r.error ? 'rgba(255,69,58,0.1)' : r.rank > 5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,102,204,0.08)',
+                      color: r.error ? '#ff453a' : 'rgba(244,248,255,0.48)',
+                      border: `1px solid ${r.error ? 'rgba(255,69,58,0.2)' : r.rank > 5 ? 'rgba(255,255,255,0.1)' : 'rgba(0,102,204,0.2)'}`,
+                    }}>
+                      {r.rank}. {r.brandName} {r.error ? '⚠' : `(${r.compositeScore})`}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Tracked competitors list */}
       <div>
         <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: I1d, margin: '0 0 10px' }}>
-          Manually Tracked
+          Tracked Competitors
         </p>
 
         {loading && (
@@ -1939,21 +2242,23 @@ function CompetitorsTab({ ventureSlug }: { ventureSlug: string }) {
 
         {!loading && brands.length === 0 && (
           <p style={{ fontSize: 12, color: I1d, padding: '8px 0' }}>
-            No custom brands tracked yet. Add one above.
+            No competitors tracked yet. Add your first competitor above.
           </p>
         )}
 
         {!loading && brands.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {brands.map(b => {
-              const isDeleting = deletingId === b.id
-              const hasData    = b.signal_score > 0
+              const isDeleting  = deletingId === b.id
+              const isRefresh   = refreshingId === b.id
+              const hasData     = b.signal_score > 0
               return (
                 <div key={b.id} style={{ ...G1, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{
-                    width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+                    width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: ACCENT, color: '#fff', fontSize: 13, fontWeight: 700,
+                    background: hasData ? ACCENT : 'rgba(12,44,82,0.10)',
+                    color: hasData ? '#fff' : I1d, fontSize: 14, fontWeight: 700,
                   }}>
                     {b.brand_name.charAt(0).toUpperCase()}
                   </div>
@@ -1961,27 +2266,37 @@ function CompetitorsTab({ ventureSlug }: { ventureSlug: string }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: I1, margin: '0 0 2px', display: 'flex', alignItems: 'center', gap: 8 }}>
                       {b.brand_name}
-                      <span style={{
-                        fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
-                        padding: '2px 7px', borderRadius: 10,
-                        background: 'rgba(0,102,204,0.10)', color: ACCENT,
-                        border: '1px solid rgba(0,102,204,0.20)',
-                      }}>
-                        Custom
-                      </span>
+                      {b.instagram_handle && (
+                        <span style={{ fontSize: 11, fontWeight: 400, color: I1c, fontFamily: 'monospace' }}>
+                          @{b.instagram_handle}
+                        </span>
+                      )}
                     </p>
                     <p style={{ fontSize: 11, color: I1d, margin: 0 }}>
                       {hasData
-                        ? `Signal score: ${Math.round(b.signal_score)} · Last scraped: ${b.last_checked ? new Date(b.last_checked).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : 'never'}`
-                        : 'No data yet — scrape in progress or APIFY_TOKEN needed'
+                        ? `${fmtFollowers(b.ig_followers)} followers · Score: ${Math.round(b.signal_score)}/100 · ${b.last_checked ? new Date(b.last_checked).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}`
+                        : 'No data yet — APIFY_TOKEN may not be configured'
                       }
                     </p>
                   </div>
 
                   <button
+                    onClick={() => { void handleRefresh(b) }}
+                    disabled={isRefresh || !b.instagram_handle}
+                    title="Refresh stats"
+                    style={{ background: 'none', border: `1px solid ${L1}`, borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: I1d, display: 'flex', alignItems: 'center', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { (e.currentTarget.style.borderColor = 'rgba(0,102,204,0.35)'); (e.currentTarget.style.color = ACCENT) }}
+                    onMouseLeave={e => { (e.currentTarget.style.borderColor = L1); (e.currentTarget.style.color = I1d) }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 16, animation: isRefresh ? 'spin 1s linear infinite' : 'none' }}>
+                      {isRefresh ? 'progress_activity' : 'refresh'}
+                    </span>
+                  </button>
+
+                  <button
                     onClick={() => { void handleDelete(b.id) }}
                     disabled={isDeleting}
-                    title="Remove from tracking"
+                    title="Remove"
                     style={{ background: 'none', border: `1px solid ${L1}`, borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: I1d, display: 'flex', alignItems: 'center', transition: 'all 0.15s' }}
                     onMouseEnter={e => { (e.currentTarget.style.borderColor = 'rgba(255,69,58,0.4)'); (e.currentTarget.style.color = '#ff453a') }}
                     onMouseLeave={e => { (e.currentTarget.style.borderColor = L1); (e.currentTarget.style.color = I1d) }}

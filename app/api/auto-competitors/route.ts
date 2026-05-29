@@ -26,8 +26,8 @@ const FALLBACKS: Record<string, { benchmark: string[]; stretch: string[]; anchor
     anchor: 'FabIndia',
   },
   'fashion e-commerce': {
-    benchmark: ['Rouje', 'By Far', 'Rhode'],
-    stretch: ['Reformation', 'Staud'],
+    benchmark: ['Elaluz', 'Mate the Label', 'Lisa Says Gah'],
+    stretch: ['Staud', 'Reformation'],
     anchor: 'Zara',
   },
   'fintech:IN': {
@@ -132,6 +132,7 @@ Rules:
 - "anchor": exactly 1 well-known brand with 1M+ followers — directional inspiration only, not a direct competitor
 - All brands must be real, active, and in the same niche as "${brandName}"
 - Prioritise brands with strong ${countryName} audience and relevance — avoid US-only giants if ${countryName} !== "United States"
+- CRITICAL: Do NOT return brands you know have 500K+ followers as "benchmark". Pick genuinely small, niche brands. If unsure about exact follower counts, err on the side of smaller, lesser-known brands.
 - Do NOT include "${brandName}" itself`,
       }],
       maxTokens: 256,

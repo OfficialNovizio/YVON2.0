@@ -13,7 +13,7 @@ const CACHE_TTL_HOURS = 24
 import { getRequiredSecret } from '@/lib/secrets'
 
 export async function getToken(): Promise<string> {
-  return getRequiredSecret('APIFY_TOKEN')
+  return getRequiredSecret('apify_api_key')
 }
 
 export async function isApifyConfigured(): Promise<boolean> {
